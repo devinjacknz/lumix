@@ -1,4 +1,5 @@
 export * from './sandbox';
+export * from './gas/predictor';
 
 // Re-export commonly used types from ethereumjs
 export {

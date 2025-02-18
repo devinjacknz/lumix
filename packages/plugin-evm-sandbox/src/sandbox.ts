@@ -5,6 +5,7 @@ import { Block } from '@ethereumjs/block';
 import { Address, toBuffer } from '@ethereumjs/util';
 import { DefaultStateManager } from '@ethereumjs/statemanager';
 import { BaseError } from '@lumix/core';
+import { GasPredictor, GasEstimationResult, GasUsageStats } from './gas/predictor';
 
 export class EVMError extends BaseError {
   constructor(message: string, options?: ErrorOptions) {
@@ -39,6 +40,7 @@ export class EVMSandbox {
   private vm: VM;
   private common: Common;
   private config: Required<EVMSandboxConfig>;
+  private gasPredictor: GasPredictor;
 
   constructor(config: EVMSandboxConfig) {
     this.config = {
@@ -61,8 +63,34 @@ export class EVMSandbox {
       hardfork: this.config.hardfork
     });
 
+    this.gasPredictor = new GasPredictor();
+
     if (this.config.debug) {
       this.setupDebugHooks();
+    }
+  }
+
+  /**
+   * 预测交易的 gas 消耗
+   */
+  async estimateGas(
+    txData: string | Buffer | Transaction,
+    contractAddress?: string | Address
+  ): Promise<GasEstimationResult> {
+    try {
+      let tx: Transaction;
+      
+      if (typeof txData === 'string') {
+        tx = Transaction.fromSerializedTx(toBuffer(txData), { common: this.common });
+      } else if (Buffer.isBuffer(txData)) {
+        tx = Transaction.fromSerializedTx(txData, { common: this.common });
+      } else {
+        tx = txData;
+      }
+
+      return await this.gasPredictor.predictGasUsage(tx, contractAddress);
+    } catch (error) {
+      throw new EVMError(`Failed to estimate gas: ${error.message}`);
     }
   }
 
@@ -85,6 +113,20 @@ export class EVMSandbox {
 
       const block = Block.fromBlockData({}, { common: this.common });
       const result = await this.vm.runTx({ tx, block });
+
+      // 收集操作码统计
+      const opcodeStats = this.collectOpcodeStats(result);
+
+      // 更新 gas 预测器
+      if (tx.to) {
+        const methodId = tx.data.slice(0, 4).toString('hex');
+        this.gasPredictor.updateContractProfile(
+          tx.to,
+          methodId,
+          result.totalGasSpent,
+          opcodeStats
+        );
+      }
 
       return {
         success: !result.execResult.exceptionError,
@@ -234,5 +276,33 @@ export class EVMSandbox {
         });
       }
     });
+  }
+
+  private collectOpcodeStats(result: any): GasUsageStats[] {
+    const stats = new Map<string, GasUsageStats>();
+
+    if (result.execResult && result.execResult.steps) {
+      for (const step of result.execResult.steps) {
+        const opcode = step.opcode.name;
+        let stat = stats.get(opcode);
+
+        if (!stat) {
+          stat = {
+            opcode,
+            count: 0,
+            totalGas: 0n,
+            avgGas: 0n
+          };
+          stats.set(opcode, stat);
+        }
+
+        stat.count++;
+        const gasUsed = step.gasUsed || 0n;
+        stat.totalGas += gasUsed;
+        stat.avgGas = stat.totalGas / BigInt(stat.count);
+      }
+    }
+
+    return Array.from(stats.values());
   }
 } 
