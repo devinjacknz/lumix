@@ -328,6 +328,33 @@ importers:
         specifier: ^5.3.3
         version: 5.7.3
 
+  packages/plugin-evm-sandbox:
+    dependencies:
+      '@ethereumjs/block':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@ethereumjs/common':
+        specifier: ^4.4.0
+        version: 4.4.0
+      '@ethereumjs/evm':
+        specifier: ^3.1.1
+        version: 3.1.1
+      '@ethereumjs/rlp':
+        specifier: ^5.0.2
+        version: 5.0.2
+      '@ethereumjs/statemanager':
+        specifier: ^2.4.0
+        version: 2.4.0
+      '@ethereumjs/tx':
+        specifier: ^5.4.0
+        version: 5.4.0
+      '@ethereumjs/util':
+        specifier: ^9.1.0
+        version: 9.1.0
+      '@ethereumjs/vm':
+        specifier: ^8.1.1
+        version: 8.1.1
+
   packages/plugin-nebula:
     dependencies:
       '@lumix/core':
@@ -1965,10 +1992,124 @@ packages:
       - utf-8-validate
     dev: false
 
+  /@ethereumjs/block@5.3.0:
+    resolution: {integrity: sha512-cyphdEB/ywIERqWLRHdAS6muTkAcd6BibMOp6XmGbeWgvtIhe4ArxcMDI78MVstJzT/faihvRI4rKQKy+MpdKQ==}
+    engines: {node: '>=18'}
+    dependencies:
+      '@ethereumjs/common': 4.4.0
+      '@ethereumjs/rlp': 5.0.2
+      '@ethereumjs/trie': 6.2.1
+      '@ethereumjs/tx': 5.4.0
+      '@ethereumjs/util': 9.1.0
+      ethereum-cryptography: 2.2.1
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
+
+  /@ethereumjs/blockchain@7.3.0:
+    resolution: {integrity: sha512-UZXFb6JFeXDHobKhXGAiKf+m5n2ynCtqpgHWCl2nQ3Tol9W7C3By4UFMpAl2E6EyaFhC26Maig9kqCWxfsQ6bQ==}
+    engines: {node: '>=18'}
+    dependencies:
+      '@ethereumjs/block': 5.3.0
+      '@ethereumjs/common': 4.4.0
+      '@ethereumjs/ethash': 3.0.4
+      '@ethereumjs/rlp': 5.0.2
+      '@ethereumjs/trie': 6.2.1
+      '@ethereumjs/tx': 5.4.0
+      '@ethereumjs/util': 9.1.0
+      debug: 4.4.0
+      ethereum-cryptography: 2.2.1
+      lru-cache: 10.1.0
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
+
+  /@ethereumjs/common@4.4.0:
+    resolution: {integrity: sha512-Fy5hMqF6GsE6DpYTyqdDIJPJgUtDn4dL120zKw+Pswuo+iLyBsEYuSyzMw6NVzD2vDzcBG9fE4+qX4X2bPc97w==}
+    dependencies:
+      '@ethereumjs/util': 9.1.0
+    dev: false
+
+  /@ethereumjs/ethash@3.0.4:
+    resolution: {integrity: sha512-dDc9h4RxEIWr38DxzeFyWlTmc++WeAFysFT6Ru0opoQ8WSM/hM3KH1VfHMPwx6JaqQT89Q/xtHV3CEvWrbwLKw==}
+    engines: {node: '>=18'}
+    dependencies:
+      '@ethereumjs/block': 5.3.0
+      '@ethereumjs/rlp': 5.0.2
+      '@ethereumjs/util': 9.1.0
+      bigint-crypto-utils: 3.3.0
+      ethereum-cryptography: 2.2.1
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
+
+  /@ethereumjs/evm@3.1.1:
+    resolution: {integrity: sha512-JbDXtIn0PPZFU2oqVngje0YvW/JuNa6Y+kIYp1MCh5pn9NRplR8FkBbvb991fVSSo6AzuFMHJxSwgVl+OksnvQ==}
+    engines: {node: '>=18'}
+    dependencies:
+      '@ethereumjs/common': 4.4.0
+      '@ethereumjs/statemanager': 2.4.0
+      '@ethereumjs/tx': 5.4.0
+      '@ethereumjs/util': 9.1.0
+      '@noble/curves': 1.8.1
+      '@types/debug': 4.1.12
+      debug: 4.4.0
+      ethereum-cryptography: 2.2.1
+      rustbn-wasm: 0.4.0
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
+
   /@ethereumjs/rlp@4.0.1:
     resolution: {integrity: sha512-tqsQiBQDQdmPWE1xkkBq4rlSW5QZpLOUJ5RJh2/9fug+q9tnUhuZoVLk7s0scUIKTOzEtR72DFBXI4WiZcMpvw==}
     engines: {node: '>=14'}
     hasBin: true
+    dev: false
+
+  /@ethereumjs/rlp@5.0.2:
+    resolution: {integrity: sha512-DziebCdg4JpGlEqEdGgXmjqcFoJi+JGulUXwEjsZGAscAQ7MyD/7LE/GVCP29vEQxKc7AAwjT3A2ywHp2xfoCA==}
+    engines: {node: '>=18'}
+    hasBin: true
+    dev: false
+
+  /@ethereumjs/statemanager@2.4.0:
+    resolution: {integrity: sha512-IBe5kMGsDWlSvNg7QCERwO3BQE1c9hzVIZ9ktZF7xyifFEfA4VNhTMMEpwLuiAIy0l/ZzZiZ17/Iqar+SawMYA==}
+    dependencies:
+      '@ethereumjs/common': 4.4.0
+      '@ethereumjs/rlp': 5.0.2
+      '@ethereumjs/trie': 6.2.1
+      '@ethereumjs/util': 9.1.0
+      debug: 4.4.0
+      ethereum-cryptography: 2.2.1
+      js-sdsl: 4.4.2
+      lru-cache: 10.1.0
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
+
+  /@ethereumjs/trie@6.2.1:
+    resolution: {integrity: sha512-MguABMVi/dPtgagK+SuY57rpXFP+Ghr2x+pBDy+e3VmMqUY+WGzFu1QWjBb5/iJ7lINk4CI2Uwsih07Nu9sTSg==}
+    engines: {node: '>=18'}
+    dependencies:
+      '@ethereumjs/rlp': 5.0.2
+      '@ethereumjs/util': 9.1.0
+      '@types/readable-stream': 2.3.15
+      debug: 4.4.0
+      ethereum-cryptography: 2.2.1
+      lru-cache: 10.1.0
+      readable-stream: 3.6.2
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
+
+  /@ethereumjs/tx@5.4.0:
+    resolution: {integrity: sha512-SCHnK7m/AouZ7nyoR0MEXw1OO/tQojSbp88t8oxhwes5iZkZCtfFdUrJaiIb72qIpH2FVw6s1k1uP7LXuH7PsA==}
+    engines: {node: '>=18'}
+    dependencies:
+      '@ethereumjs/common': 4.4.0
+      '@ethereumjs/rlp': 5.0.2
+      '@ethereumjs/util': 9.1.0
+      ethereum-cryptography: 2.2.1
     dev: false
 
   /@ethereumjs/util@8.1.0:
@@ -1978,6 +2119,33 @@ packages:
       '@ethereumjs/rlp': 4.0.1
       ethereum-cryptography: 2.2.1
       micro-ftch: 0.3.1
+    dev: false
+
+  /@ethereumjs/util@9.1.0:
+    resolution: {integrity: sha512-XBEKsYqLGXLah9PNJbgdkigthkG7TAGvlD/sH12beMXEyHDyigfcbdvHhmLyDWgDyOJn4QwiQUaF7yeuhnjdog==}
+    engines: {node: '>=18'}
+    dependencies:
+      '@ethereumjs/rlp': 5.0.2
+      ethereum-cryptography: 2.2.1
+    dev: false
+
+  /@ethereumjs/vm@8.1.1:
+    resolution: {integrity: sha512-h9gIN/maMKXltM4VxZ9ac581PPUUObnFVBniLuu9vJgGTELdnwqxLwJVxSfho/Bhk56YyvKBYf1RpHwoLZZ6xw==}
+    engines: {node: '>=18'}
+    dependencies:
+      '@ethereumjs/block': 5.3.0
+      '@ethereumjs/blockchain': 7.3.0
+      '@ethereumjs/common': 4.4.0
+      '@ethereumjs/evm': 3.1.1
+      '@ethereumjs/rlp': 5.0.2
+      '@ethereumjs/statemanager': 2.4.0
+      '@ethereumjs/trie': 6.2.1
+      '@ethereumjs/tx': 5.4.0
+      '@ethereumjs/util': 9.1.0
+      debug: 4.4.0
+      ethereum-cryptography: 2.2.1
+    transitivePeerDependencies:
+      - supports-color
     dev: false
 
   /@ethersproject/abi@5.7.0:
@@ -4870,6 +5038,12 @@ packages:
       '@types/node': 20.17.19
     dev: false
 
+  /@types/debug@4.1.12:
+    resolution: {integrity: sha512-vIChWdVG3LG1SMxEvI/AK+FWJthlrqlTu7fbrlywTkkaONwk/UAGaULXRlf8vkzFBLVm0zkMdCquhL5aOjhXPQ==}
+    dependencies:
+      '@types/ms': 2.1.0
+    dev: false
+
   /@types/estree@1.0.6:
     resolution: {integrity: sha512-AYnb1nQyY49te+VRAVgmzfcgjYS91mY5P0TKUDCLEM+gNnA+3T6rWITXRLYCpahpqSQbN5cE+gHpnPyXjHWxcw==}
 
@@ -4909,6 +5083,10 @@ packages:
       pretty-format: 29.7.0
     dev: true
 
+  /@types/ms@2.1.0:
+    resolution: {integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==}
+    dev: false
+
   /@types/natural@5.1.5:
     resolution: {integrity: sha512-HE6F0/q4YBRWpbqua2waJck4IBY/HLWGFLrdbkD9sMSdufyCCuTe3Gy5N4kn8/8XFhz6L/mm9RLs/kJTiT3tcg==}
     dependencies:
@@ -4939,6 +5117,13 @@ packages:
 
   /@types/parse-json@4.0.2:
     resolution: {integrity: sha512-dISoDXWWQwUquiKsyZ4Ng+HX2KsPL7LyHKHQwgGFEA3IaKac4Obd+h2a/a6waisAoepJlBcx9paWqjA8/HVjCw==}
+    dev: false
+
+  /@types/readable-stream@2.3.15:
+    resolution: {integrity: sha512-oM5JSKQCcICF1wvGgmecmHldZ48OZamtMxcGGVICOJA8o8cahXC1zEVAif8iwoc5j8etxFaRFnf095+CDsuoFQ==}
+    dependencies:
+      '@types/node': 20.17.19
+      safe-buffer: 5.1.2
     dev: false
 
   /@types/retry@0.12.0:
@@ -5959,6 +6144,11 @@ packages:
     requiresBuild: true
     dependencies:
       bindings: 1.5.0
+    dev: false
+
+  /bigint-crypto-utils@3.3.0:
+    resolution: {integrity: sha512-jOTSb+drvEDxEq6OuUybOAv/xxoh3cuYRUIPyu8sSHQNKM303UQ2R1DAo45o1AkcIXw6fzbaFI1+xGGdaXs2lg==}
+    engines: {node: '>=14.0.0'}
     dev: false
 
   /bignumber.js@9.1.2:
@@ -8793,6 +8983,10 @@ packages:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
     engines: {node: '>=10'}
 
+  /js-sdsl@4.4.2:
+    resolution: {integrity: sha512-dwXFwByc/ajSV6m5bcKAPwe4yDDF6D614pxmIi5odytzxRlwqF6nwoiCek80Ixc7Cvma5awClxrzFtxCQvcM8w==}
+    dev: false
+
   /js-sha256@0.9.0:
     resolution: {integrity: sha512-sga3MHh9sgQN2+pJ9VYZ+1LPwXOxuBJBA5nrR5/ofPfuiJBE2hnjsaN8se8JznOmGLN2p49Pe5U/ttafcs/apA==}
     dev: false
@@ -9293,6 +9487,11 @@ packages:
     resolution: {integrity: sha512-7fm3l3NAF9WfN6W3JOmf5drwpVqX78JtoGJ3A6W0a6ZnldM41w2fV5D490psKFTpMds8TJse/eHLFFsNHHjHgg==}
     dependencies:
       tslib: 2.8.1
+    dev: false
+
+  /lru-cache@10.1.0:
+    resolution: {integrity: sha512-/1clY/ui8CzjKFyjdvwPWJUYKiFVXG2I2cY0ssG7h4+hwk+XOIX7ZSG9Q7TW8TW3Kp3BUSqgFWBLgL4PJ+Blag==}
+    engines: {node: 14 || >=16.14}
     dev: false
 
   /lru-cache@10.4.3:
@@ -10910,6 +11109,12 @@ packages:
     dependencies:
       queue-microtask: 1.2.3
     dev: true
+
+  /rustbn-wasm@0.4.0:
+    resolution: {integrity: sha512-C2ujvPv05hXC69MD7YwSsoUEsT/X/dKHkkgwN9B0ZTgb0OXDC9yaHhE6Pq+uaRAzMyW0Y97bwc4JO4cqPDzVuQ==}
+    dependencies:
+      '@scure/base': 1.1.9
+    dev: false
 
   /rxjs@7.8.1:
     resolution: {integrity: sha512-AA3TVj+0A2iuIoQkWEK/tqFjBq2j+6PO6Y0zJcvzLAFhEFIO3HL0vls9hWLncZbAAbK0mar7oZ4V079I/qPMxg==}
