@@ -1,0 +1,41 @@
+# {{guide.title}}
+
+{{guide.description}}
+
+## 目录
+
+{{#each guide.sections}}
+- [{{title}}](#{{anchor}})
+{{/each}}
+
+{{#each guide.sections}}
+## {{title}}
+
+{{content}}
+
+{{#if examples}}
+### 示例
+
+{{#each examples}}
+```typescript
+{{this}}
+```
+{{/each}}
+{{/if}}
+
+{{#if notes}}
+### 注意事项
+
+{{#each notes}}
+- {{this}}
+{{/each}}
+{{/if}}
+
+---
+{{/each}}
+
+## 相关资源
+
+{{#each guide.resources}}
+- [{{name}}]({{url}}) - {{description}}
+{{/each}} 

@@ -9,7 +9,10 @@
     "clean": "turbo run clean && rm -rf node_modules",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "check-deps": "ts-node scripts/check-langchain-versions.ts",
+    "update-deps": "bash scripts/update-dependencies.sh",
+    "update-check": "pnpm check-deps && pnpm update-deps"
   },
   "devDependencies": {
     "@babel/core": "^7.23.9",
@@ -42,6 +45,7 @@
     "jest-canvas-mock": "^2.5.2",
     "jest-environment-jsdom": "^29.7.0",
     "natural": "^8.0.1",
+    "node-fetch": "^2.6.7",
     "telegraf": "^4.16.3",
     "ts-jest": "^29.1.2",
     "turbo": "^1.12.4",
@@ -52,7 +56,15 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
+    "@langchain/anthropic": "^0.0.1",
+    "@langchain/community": "^0.0.1",
+    "@langchain/core": "^0.1.0",
+    "@langchain/openai": "^0.0.1",
+    "@solana/web3.js": "^1.87.6",
     "@types/axios": "^0.14.4",
-    "axios": "^1.6.7"
+    "axios": "^1.6.7",
+    "bs58": "^6.0.0",
+    "ethers": "^6.13.5",
+    "langchain": "^0.1.0"
   }
 }

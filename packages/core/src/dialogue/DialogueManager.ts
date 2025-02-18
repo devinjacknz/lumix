@@ -1,4 +1,5 @@
-import { DialogueManagerConfig, DialogueManagerInterface, Message, MessageRole } from './types';
+import { promises as fs } from 'fs';
+import { Message, DialogueManagerConfig, DialogueManagerInterface } from './types';
 
 export class DialogueManager implements DialogueManagerInterface {
   private history: Message[] = [];
@@ -6,33 +7,37 @@ export class DialogueManager implements DialogueManagerInterface {
 
   constructor(config: DialogueManagerConfig) {
     this.config = config;
+    this.loadHistory();
   }
 
-  private validateMessage(message: Message): void {
-    const validRoles: MessageRole[] = ['user', 'assistant', 'system'];
-    
-    if (!validRoles.includes(message.role)) {
-      throw new Error(`Invalid message role: ${message.role}`);
+  private async loadHistory(): Promise<void> {
+    if (this.config.persistenceEnabled && this.config.persistencePath) {
+      try {
+        const data = await fs.readFile(this.config.persistencePath, 'utf-8');
+        this.history = JSON.parse(data);
+      } catch (error) {
+        // File doesn't exist or is invalid, start with empty history
+        this.history = [];
+      }
     }
+  }
 
-    if (!message.content || message.content.trim().length === 0) {
-      throw new Error('Message content cannot be empty');
+  private async saveHistory(): Promise<void> {
+    if (this.config.persistenceEnabled && this.config.persistencePath) {
+      await fs.writeFile(
+        this.config.persistencePath,
+        JSON.stringify(this.history),
+        'utf-8'
+      );
     }
   }
 
   async addMessage(message: Message): Promise<void> {
-    this.validateMessage(message);
-
     this.history.push(message);
-
-    // Maintain maxHistory limit
     if (this.history.length > this.config.maxHistory) {
       this.history = this.history.slice(-this.config.maxHistory);
     }
-
-    if (this.config.persistenceEnabled) {
-      await this.persistHistory();
-    }
+    await this.saveHistory();
   }
 
   async getHistory(): Promise<Message[]> {
@@ -41,20 +46,12 @@ export class DialogueManager implements DialogueManagerInterface {
 
   async clearHistory(): Promise<void> {
     this.history = [];
-    
-    if (this.config.persistenceEnabled) {
-      await this.persistHistory();
-    }
+    await this.saveHistory();
   }
 
   async getLastMessage(): Promise<Message | null> {
     return this.history.length > 0 ? this.history[this.history.length - 1] : null;
   }
-
-  private async persistHistory(): Promise<void> {
-    // TODO: Implement persistence logic when storage adapter is ready
-    if (!this.config.persistencePath) {
-      throw new Error('Persistence path not configured');
-    }
-  }
 }
+
+export default DialogueManager; 

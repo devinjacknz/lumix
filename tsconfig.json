@@ -36,13 +36,12 @@
     { "path": "packages/plugin-strategy-agent" },
     { "path": "packages/plugin-solana-v2" },
     { "path": "packages/plugin-solana" },
-    { "path": "packages/plugin-pyth-data" },
     { "path": "packages/plugin-news" },
-    { "path": "packages/plugin-dexscreener" },
     { "path": "packages/adapter-sqlite" },
     { "path": "packages/plugin-defi-crawler" },
     { "path": "packages/plugin-chain-adapter" },
-    { "path": "packages/plugin-chain-analyzer" }
+    { "path": "packages/plugin-chain-analyzer" },
+    { "path": "packages/plugin-price-oracle" }
   ],
   "exclude": ["node_modules", "dist"]
 }

@@ -21,3 +21,11 @@ export class Database {
     return this.adapter.query<T>(sql, params);
   }
 }
+
+export * from './types';
+export * from './sqlite-adapter';
+export * from './database-manager';
+
+// 导出数据库管理器单例
+import { DatabaseManager } from './database-manager';
+export const databaseManager = DatabaseManager.getInstance();

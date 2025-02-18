@@ -1,0 +1,69 @@
+name: Check LangChain Updates
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'  # 每周一运行
+  workflow_dispatch:      # 允许手动触发
+
+jobs:
+  check-updates:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          
+      - name: Install dependencies
+        run: pnpm install
+        
+      - name: Check for updates
+        id: check
+        run: pnpm check-deps
+        continue-on-error: true
+        
+      - name: Create issue if updates available
+        if: steps.check.outcome == 'failure'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            // 读取检查结果
+            const checkOutput = fs.readFileSync(path.join(process.env.GITHUB_WORKSPACE, 'check-output.txt'), 'utf8');
+            
+            // 创建 issue
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🔄 LangChain Dependencies Update Available',
+              body: `
+            ## LangChain Dependencies Update Check
+            
+            New versions of LangChain dependencies are available:
+            
+            \`\`\`
+            ${checkOutput}
+            \`\`\`
+            
+            Please run \`pnpm update-deps\` to update the dependencies.
+            
+            ### Important Notes
+            - Review the changelog before updating
+            - Run tests after updating
+            - Check for breaking changes
+            
+            This issue was automatically created by the dependency check workflow.
+            `,
+              labels: ['dependencies', 'langchain']
+            }); 

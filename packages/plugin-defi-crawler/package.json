@@ -14,8 +14,7 @@
   },
   "dependencies": {
     "@lumix/core": "workspace:*",
-    "@lumix/plugin-chain-adapter": "workspace:*",
-    "@lumix/plugin-chain-analyzer": "workspace:*",
+    "@lumix/plugin-chain-core": "workspace:*",
     "@lumix/plugin-nebula": "workspace:*",
     "axios": "^1.6.7",
     "cheerio": "^1.0.0-rc.12",

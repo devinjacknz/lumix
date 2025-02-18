@@ -1,3 +1,5 @@
+import { Plugin, PluginManager } from '@lumix/core';
+import { ChainAdapterFactory, ChainConfig } from '@lumix/plugin-chain-core';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { Decimal } from 'decimal.js';
@@ -13,10 +15,11 @@ import {
   PriceData
 } from './types';
 
-export class TokenAnalyzerPlugin {
+export class TokenAnalyzerPlugin implements Plugin {
   private connection: Connection;
   private solana: SolanaPlugin;
   private config: TokenAnalyzerConfig;
+  private chainAdapter;
 
   constructor(config: TokenAnalyzerConfig) {
     this.connection = new Connection(config.rpcUrl);
@@ -25,6 +28,26 @@ export class TokenAnalyzerPlugin {
       wallet: config.wallet
     });
     this.config = config;
+  }
+
+  async initialize(manager: PluginManager) {
+    // 初始化 Solana 链适配器
+    const solanaConfig: ChainConfig = {
+      rpcUrl: this.config.rpcUrl || 'https://api.mainnet-beta.solana.com',
+      chainId: 'solana',
+      name: 'Solana',
+      nativeCurrency: {
+        name: 'Solana',
+        symbol: 'SOL',
+        decimals: 9
+      }
+    };
+
+    this.chainAdapter = await ChainAdapterFactory.createAndConnect(solanaConfig);
+  }
+
+  getName(): string {
+    return 'token-analyzer';
   }
 
   /**

@@ -20,8 +20,7 @@
   "license": "MIT",
   "dependencies": {
     "@lumix/core": "workspace:*",
-    "@lumix/plugin-chain-adapter": "workspace:*",
-    "@lumix/plugin-chain-analyzer": "workspace:*",
+    "@lumix/plugin-chain-core": "workspace:*",
     "express": "^4.18.2",
     "socket.io": "^4.7.4",
     "chart.js": "^4.4.1",

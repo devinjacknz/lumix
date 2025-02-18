@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { KnowledgeBase, Plugin, PluginManager } from '@lumix/core';
+import { Plugin, PluginManager } from '@lumix/core';
 import { NebulaPlugin } from '@lumix/plugin-nebula';
 import {
   ContractAnalysisResult,
@@ -7,35 +7,30 @@ import {
   SecurityScore,
   TokenMetrics,
   LiquidityAnalysis,
-  MarketMetrics
+  MarketMetrics,
+  DeFiAnalyzerConfig
 } from './types';
-import { ChainAdapter, ChainProtocol, AnalysisResult } from '@lumix/plugin-chain-adapter';
+import { ChainAdapter, ChainConfig, ChainAdapterFactory } from '@lumix/plugin-chain-core';
 import { KnowledgeStats } from '@lumix/core';
 
-export class DeFiAnalyzer {
-  private knowledgeBase: KnowledgeBase;
+export class DeFiAnalyzer implements Plugin {
+  private knowledgeBase: any; // TODO: 定义正确的类型
   private nebulaPlugin?: NebulaPlugin;
-  private chainAdapters: Map<ChainProtocol, ChainAdapter>;
-  private analyzers: Map<ChainProtocol, any>;
+  private chainAdapters: Map<string, ChainAdapter>;
+  private analyzers: Map<string, any>;
   private knowledgeStats: KnowledgeStats;
   
-  constructor(private provider: ethers.providers.Provider, adapters: ChainAdapter[]) {
+  constructor(
+    private config: DeFiAnalyzerConfig,
+    private provider: ethers.providers.JsonRpcProvider
+  ) {
     this.chainAdapters = new Map();
     this.analyzers = new Map();
     this.knowledgeStats = new KnowledgeStats();
-    
-    adapters.forEach(adapter => {
-      this.chainAdapters.set(adapter.protocol, adapter);
-      
-      // 初始化对应链的分析器
-      if (adapter.protocol === ChainProtocol.SOLANA) {
-        // 动态导入 Solana 分析器
-        import('@lumix/plugin-chain-analyzer/solana').then(({ SolanaAnalyzer }) => {
-          this.analyzers.set(adapter.protocol, new SolanaAnalyzer(adapter));
-        });
-      }
-      // 添加其他链的支持
-    });
+  }
+
+  getName(): string {
+    return 'defi-analyzer';
   }
 
   async initialize(manager: PluginManager) {
@@ -44,25 +39,72 @@ export class DeFiAnalyzer {
     if (!this.nebulaPlugin) {
       throw new Error('Nebula plugin not found');
     }
+
+    // 初始化支持的链
+    await this.initializeChainAdapters();
   }
 
-  async analyzeContract(address: string): Promise<ContractAnalysisResult> {
+  private async initializeChainAdapters() {
+    // 初始化 EVM 链
+    const evmConfig: ChainConfig = {
+      rpcUrl: this.provider.connection.url,
+      chainId: (await this.provider.getNetwork()).chainId,
+      name: 'Ethereum',
+      nativeCurrency: {
+        name: 'Ether',
+        symbol: 'ETH',
+        decimals: 18
+      }
+    };
+    
+    // 初始化 Solana 链
+    const solanaConfig: ChainConfig = {
+      rpcUrl: 'https://api.mainnet-beta.solana.com',
+      chainId: 'solana',
+      name: 'Solana',
+      nativeCurrency: {
+        name: 'Solana',
+        symbol: 'SOL',
+        decimals: 9
+      }
+    };
+
     try {
-      const code = await this.provider.getCode(address);
-      const bytecodeAnalysis = await this.analyzeBytecode(code);
-      const securityAnalysis = await this.performSecurityAnalysis(address, code);
-      const riskAssessment = await this.assessRisk(address, bytecodeAnalysis, securityAnalysis);
+      const [evmAdapter, solanaAdapter] = await Promise.all([
+        ChainAdapterFactory.createAndConnect(evmConfig),
+        ChainAdapterFactory.createAndConnect(solanaConfig)
+      ]);
 
-      // 使用 Nebula AI 进行智能分析
-      const aiAnalysis = await this.performAIAnalysis(address);
+      this.chainAdapters.set('evm', evmAdapter);
+      this.chainAdapters.set('solana', solanaAdapter);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error('Failed to initialize chain adapters:', error.message);
+      }
+    }
+  }
 
-      // 存储分析结果到知识库
-      await this.storeAnalysisResult(address, {
-        bytecodeAnalysis,
-        securityAnalysis,
-        riskAssessment,
-        aiAnalysis
-      });
+  async analyzeContract(address: string, chain: string = 'evm'): Promise<ContractAnalysisResult> {
+    const adapter = this.chainAdapters.get(chain);
+    if (!adapter) {
+      throw new Error(`Chain adapter not found for ${chain}`);
+    }
+
+    try {
+      // 获取合约数据
+      const account = await adapter.getAccount(address);
+      
+      // 分析字节码
+      const bytecodeAnalysis = await this.analyzeBytecode(account.code);
+      
+      // 分析安全性
+      const securityAnalysis = await this.analyzeContractSecurity(address, account);
+      
+      // 评估风险
+      const riskAssessment = await this.assessContractRisk(address, bytecodeAnalysis, securityAnalysis);
+      
+      // AI 分析
+      const aiAnalysis = await this.performAIAnalysis(address, account);
 
       return {
         address,
@@ -95,27 +137,17 @@ export class DeFiAnalyzer {
     };
   }
 
-  private async performSecurityAnalysis(address: string, bytecode: string): Promise<SecurityScore> {
-    const securityChecks = [
-      this.checkReentrancy(bytecode),
-      this.checkOverflow(bytecode),
-      this.checkAccessControl(bytecode),
-      this.checkTimeManipulation(bytecode),
-      // 添加更多安全检查
-    ];
-
-    const results = await Promise.all(securityChecks);
-    const score = results.reduce((acc, curr) => acc + curr.score, 0) / results.length;
-
+  private async analyzeContractSecurity(address: string, account: any): Promise<SecurityScore> {
+    // 实现分析合约安全性的逻辑
     return {
-      overallScore: score,
-      details: results,
-      recommendations: this.generateSecurityRecommendations(results),
+      overallScore: 0,
+      details: [],
+      recommendations: [],
       timestamp: Date.now()
     };
   }
 
-  private async assessRisk(
+  private async assessContractRisk(
     address: string,
     bytecodeAnalysis: any,
     securityAnalysis: SecurityScore
@@ -139,7 +171,7 @@ export class DeFiAnalyzer {
     };
   }
 
-  private async performAIAnalysis(address: string) {
+  private async performAIAnalysis(address: string, account: any) {
     if (!this.nebulaPlugin) {
       throw new Error('Nebula plugin not initialized');
     }
@@ -175,42 +207,6 @@ export class DeFiAnalyzer {
     };
 
     return (metrics.length * 0.3 + metrics.uniqueOpcodes * 0.7) / 1000;
-  }
-
-  private async checkReentrancy(bytecode: string) {
-    // 重入攻击检查
-    return {
-      type: 'reentrancy',
-      score: Math.random() * 100,
-      findings: []
-    };
-  }
-
-  private async checkOverflow(bytecode: string) {
-    // 溢出检查
-    return {
-      type: 'overflow',
-      score: Math.random() * 100,
-      findings: []
-    };
-  }
-
-  private async checkAccessControl(bytecode: string) {
-    // 访问控制检查
-    return {
-      type: 'accessControl',
-      score: Math.random() * 100,
-      findings: []
-    };
-  }
-
-  private async checkTimeManipulation(bytecode: string) {
-    // 时间操作检查
-    return {
-      type: 'timeManipulation',
-      score: Math.random() * 100,
-      findings: []
-    };
   }
 
   private assessCodeQuality(bytecodeAnalysis: any): number {
@@ -253,17 +249,6 @@ export class DeFiAnalyzer {
     if (overallRisk < 60) return 'MEDIUM';
     if (overallRisk < 80) return 'HIGH';
     return 'CRITICAL';
-  }
-
-  private generateSecurityRecommendations(results: any[]): string[] {
-    // 生成安全建议
-    return [
-      '实施重入锁定机制',
-      '使用 SafeMath 库防止溢出',
-      '实施严格的访问控制',
-      '避免依赖区块时间戳',
-      // 添加更多建议
-    ];
   }
 
   private generateRiskRecommendations(riskFactors: any): string[] {
@@ -333,7 +318,7 @@ export class DeFiAnalyzer {
     };
   }
 
-  async analyzeProtocol(address: string, protocol: ChainProtocol): Promise<AnalysisResult> {
+  async analyzeProtocol(address: string, protocol: string): Promise<any> {
     const analyzer = this.analyzers.get(protocol);
     if (!analyzer) {
       throw new Error(`Analyzer not found for protocol: ${protocol}`);
@@ -342,25 +327,23 @@ export class DeFiAnalyzer {
     return analyzer.analyzeContract(address);
   }
 
-  async analyzeLiquidity(address: string, protocol: ChainProtocol): Promise<any> {
+  async analyzeLiquidity(address: string, protocol: string): Promise<LiquidityAnalysis> {
     const adapter = this.chainAdapters.get(protocol);
     if (!adapter) {
       throw new Error(`Chain adapter not found for protocol: ${protocol}`);
     }
 
-    // 获取流动性数据
-    const balance = await adapter.getBalance(address);
-    const code = await adapter.getCode(address);
+    // 获取账户数据
+    const account = await adapter.getAccount(address);
 
-    // TODO: 实现具体的流动性分析逻辑
     return {
-      balance,
-      hasCode: code !== '0x',
-      // 添加更多分析结果
+      price: 0,
+      depth: 0,
+      impermanentLoss: 0
     };
   }
 
-  async analyzeTransactionFlow(txHash: string, protocol: ChainProtocol): Promise<any> {
+  async analyzeTransactionFlow(txHash: string, protocol: string): Promise<any> {
     const adapter = this.chainAdapters.get(protocol);
     if (!adapter) {
       throw new Error(`Chain adapter not found for protocol: ${protocol}`);

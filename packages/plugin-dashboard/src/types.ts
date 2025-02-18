@@ -1,5 +1,5 @@
 import { BaseError } from '@lumix/core';
-import { ChainState } from '@lumix/plugin-chain-adapter';
+import { ChainState } from '@lumix/plugin-chain-core';
 import { GraphAnalysisResult } from '@lumix/plugin-protocol-graph';
 import { ValidationResult } from '@lumix/plugin-oracle-validator';
 

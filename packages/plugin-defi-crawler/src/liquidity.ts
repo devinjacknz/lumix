@@ -1,12 +1,18 @@
 import { ethers } from 'ethers';
 import { LiquidityAnalysis, MarketMetrics } from './types';
+import { PriceOraclePlugin } from '@lumix/plugin-price-oracle';
 
 export class LiquidityAnalyzer {
+  private priceOracle: PriceOraclePlugin;
+
   constructor(
     private provider: ethers.providers.Provider,
     private dexScreenerApi?: string,
-    private coingeckoApi?: string
-  ) {}
+    private coingeckoApi?: string,
+    priceOracleConfig?: any
+  ) {
+    this.priceOracle = new PriceOraclePlugin(priceOracleConfig);
+  }
 
   async analyzeLiquidity(
     tokenAddress: string,
@@ -142,11 +148,21 @@ export class LiquidityAnalyzer {
   }
 
   private async getMarketData(tokenAddress: string) {
-    // 实现获取市场数据的逻辑
-    return {
-      prices: Array(30).fill(0).map(() => Math.random() * 100),
-      volumes: Array(30).fill(0).map(() => Math.random() * 1000000)
-    };
+    try {
+      // 使用价格预言机获取价格数据
+      const priceData = await this.priceOracle.getPriceFromAllSources(`${tokenAddress}/USD`);
+      
+      return {
+        prices: priceData.map(data => data.price),
+        volumes: priceData.map(data => data.volume24h || 0)
+      };
+    } catch (error) {
+      console.error('Failed to fetch market data:', error);
+      return {
+        prices: [],
+        volumes: []
+      };
+    }
   }
 
   private async calculateVolatility(marketData: any) {

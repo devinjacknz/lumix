@@ -3,6 +3,7 @@ import { BaseError } from '../types/errors';
 import { MetricsCollector } from '../metrics/collector';
 import { ResourceLimiter } from '../resource/limiter';
 import { PerformanceTracer } from '../profiler/tracer';
+import { StreamProcessor, StreamProcessorConfig } from './stream-processor';
 
 /**
  * 监控器错误
@@ -35,6 +36,9 @@ export interface MonitorConfig {
   // 聚合配置
   aggregationWindow?: number;
   aggregationFunctions?: Array<'avg' | 'min' | 'max' | 'sum' | 'count'>;
+
+  // 流处理器配置
+  streamProcessor?: StreamProcessorConfig;
 }
 
 /**
@@ -85,6 +89,7 @@ export class RealTimeMonitor extends EventEmitter {
   private status: MonitorStatus;
   private startTime: number;
   private interval?: NodeJS.Timeout;
+  private streamProcessor?: StreamProcessor;
 
   constructor(config: MonitorConfig = {}) {
     super();
@@ -98,12 +103,16 @@ export class RealTimeMonitor extends EventEmitter {
       storageLimit: config.storageLimit || 100 * 1024 * 1024, // 100MB
       retentionPeriod: config.retentionPeriod || 24 * 60 * 60 * 1000, // 24小时
       aggregationWindow: config.aggregationWindow || 60000, // 1分钟
-      aggregationFunctions: config.aggregationFunctions || ['avg', 'min', 'max']
+      aggregationFunctions: config.aggregationFunctions || ['avg', 'min', 'max'],
+      streamProcessor: config.streamProcessor || {}
     };
 
     this.dataPoints = [];
     this.startTime = Date.now();
     this.status = this.initializeStatus();
+
+    // 初始化流处理器
+    this.initializeStreamProcessor();
 
     if (this.config.enabled) {
       this.start();
@@ -130,9 +139,56 @@ export class RealTimeMonitor extends EventEmitter {
         performance: {
           status: 'up',
           lastCheck: Date.now()
+        },
+        processor: {
+          status: 'up',
+          lastCheck: Date.now()
         }
       }
     };
+  }
+
+  /**
+   * 初始化流处理器
+   */
+  private initializeStreamProcessor(): void {
+    this.streamProcessor = new StreamProcessor(this.config.streamProcessor);
+
+    // 处理批次数据
+    this.streamProcessor.on('batch', (batch: MonitorDataPoint[]) => {
+      // 更新数据点
+      this.updateDataPoints(batch);
+      // 发送数据更新事件
+      this.emit('data', batch);
+    });
+
+    // 处理错误
+    this.streamProcessor.on('error', (error: Error) => {
+      this.updateComponentStatus('processor', 'degraded', String(error));
+      this.emit('error', error);
+    });
+
+    // 处理统计信息
+    this.streamProcessor.on('processed', (stats) => {
+      this.updateComponentStatus('processor', 'up');
+      this.emit('stats', stats);
+    });
+  }
+
+  /**
+   * 更新数据点
+   */
+  private updateDataPoints(batch: MonitorDataPoint[]): void {
+    this.dataPoints.push(...batch);
+
+    // 保持数据点数量在限制内
+    while (this.dataPoints.length > this.config.maxDataPoints) {
+      this.dataPoints.shift();
+    }
+
+    // 清理过期数据
+    const cutoffTime = Date.now() - this.config.retentionPeriod;
+    this.dataPoints = this.dataPoints.filter(point => point.timestamp >= cutoffTime);
   }
 
   /**
@@ -162,12 +218,12 @@ export class RealTimeMonitor extends EventEmitter {
       performance: await this.collectPerformance()
     };
 
-    this.addDataPoint(dataPoint);
-    this.emit('data', dataPoint);
-
-    // 检查存储限制
-    if (this.getStorageSize() > this.config.storageLimit) {
-      this.cleanupOldData();
+    // 使用流处理器处理数据
+    if (this.streamProcessor) {
+      await this.streamProcessor.addDataPoint(dataPoint);
+    } else {
+      this.updateDataPoints([dataPoint]);
+      this.emit('data', dataPoint);
     }
 
     return dataPoint;
@@ -272,18 +328,6 @@ export class RealTimeMonitor extends EventEmitter {
     }
 
     return performance;
-  }
-
-  /**
-   * 添加数据点
-   */
-  private addDataPoint(point: MonitorDataPoint): void {
-    this.dataPoints.push(point);
-
-    // 限制数据点数量
-    if (this.dataPoints.length > this.config.maxDataPoints) {
-      this.dataPoints.shift();
-    }
   }
 
   /**
@@ -435,18 +479,10 @@ export class RealTimeMonitor extends EventEmitter {
   }
 
   /**
-   * 获取存储大小
+   * 获取处理器统计信息
    */
-  private getStorageSize(): number {
-    return JSON.stringify(this.dataPoints).length;
-  }
-
-  /**
-   * 清理旧数据
-   */
-  private cleanupOldData(): void {
-    const cutoff = Date.now() - this.config.retentionPeriod;
-    this.dataPoints = this.dataPoints.filter(p => p.timestamp > cutoff);
+  getProcessorStats() {
+    return this.streamProcessor?.getStats();
   }
 
   /**
@@ -457,7 +493,12 @@ export class RealTimeMonitor extends EventEmitter {
       clearInterval(this.interval);
       this.interval = undefined;
     }
-    this.updateStatus('degraded', 'Monitor stopped');
-    this.emit('stopped');
+
+    if (this.streamProcessor) {
+      this.streamProcessor.stop();
+    }
+
+    this.status.healthy = false;
+    this.emit('stop');
   }
 }

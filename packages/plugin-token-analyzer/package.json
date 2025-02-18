@@ -12,7 +12,7 @@
     "test": "jest --coverage --passWithNoTests"
   },
   "dependencies": {
-    "@lumix/plugin-solana": "workspace:*",
+    "@lumix/plugin-chain-core": "workspace:*",
     "@solana/spl-token": "^0.3.9",
     "@solana/web3.js": "^1.87.6",
     "@solana/wallet-adapter-base": "^0.9.23",

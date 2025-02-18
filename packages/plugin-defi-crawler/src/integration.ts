@@ -3,6 +3,7 @@ import { NebulaPlugin } from '@lumix/plugin-nebula';
 import { DeFiAnalyzer } from './analyzer';
 import { LiquidityAnalyzer } from './liquidity';
 import { CrawlerConfig, AnalysisReport, DeFiEvent } from './types';
+import { ethers } from 'ethers';
 
 export class IntegrationManager {
   private knowledgeBase: KnowledgeBase;
@@ -16,11 +17,7 @@ export class IntegrationManager {
   ) {
     this.knowledgeBase = pluginManager.getKnowledgeBase();
     this.defiAnalyzer = new DeFiAnalyzer(config.provider);
-    this.liquidityAnalyzer = new LiquidityAnalyzer(
-      config.provider,
-      config.dexScreenerApi,
-      config.coingeckoApi
-    );
+    this.liquidityAnalyzer = createLiquidityAnalyzer(config, config.provider);
   }
 
   async initialize() {
@@ -240,4 +237,14 @@ export class IntegrationManager {
     // 实现覆盖率计算的逻辑
     return Math.random() * 100;
   }
+}
+
+export function createLiquidityAnalyzer(config: Config, provider: ethers.providers.Provider) {
+  return new LiquidityAnalyzer(
+    provider,
+    {
+      defaultSource: config.priceOracle || 'pyth',
+      minimumConfidence: 0.8
+    }
+  );
 } 

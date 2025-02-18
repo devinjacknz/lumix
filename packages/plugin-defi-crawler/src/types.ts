@@ -158,7 +158,6 @@ export interface CrawlerConfig {
   dataProviders: {
     defiLlama?: boolean;
     coingecko?: boolean;
-    dexScreener?: boolean;
   };
 }
 
@@ -239,4 +238,31 @@ export interface CrawlerError {
   error: string;
   timestamp: number;
   retryCount: number;
+}
+
+export interface Config {
+  chains: Chain[];
+  protocols: string[];
+  interval: number;
+  maxConcurrency: number;
+  dataProviders: {
+    defiLlama?: boolean;
+    coingecko?: boolean;
+  };
+  priceOracle?: string;
+}
+
+export interface DeFiAnalyzerConfig {
+  rpcUrl: string;
+  chainId: number | string;
+  apiEndpoints?: {
+    dexScreener?: string;
+    coingecko?: string;
+  };
+  cache?: {
+    enabled: boolean;
+    duration: number;
+  };
+  retryAttempts?: number;
+  timeout?: number;
 }
