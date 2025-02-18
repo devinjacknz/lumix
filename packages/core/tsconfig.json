@@ -8,7 +8,18 @@
       "@lumix/types": ["../types/src"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/types/**/*.ts",
+    "src/dialogue/**/*.ts",
+    "src/cache/**/*.ts",
+    "src/database/**/*.ts",
+    "src/monitoring/**/*.ts",
+    "src/chain/**/*.ts",
+    "src/config/**/*.ts",
+    "src/messaging/**/*.ts"
+  ],
   "references": [
     { "path": "../types" }
   ]

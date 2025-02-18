@@ -1,5 +1,6 @@
 import { BaseError } from '../types/errors';
 
+// Types
 export interface CacheConfig {
   maxSize?: number;
   ttl?: number; // Time to live in milliseconds
@@ -12,6 +13,7 @@ export interface CacheEntry<T> {
   expiresAt: number;
 }
 
+// Error class
 export class CacheError extends BaseError {
   code: string;
   details?: Record<string, any>;
@@ -24,6 +26,7 @@ export class CacheError extends BaseError {
   }
 }
 
+// Main cache manager
 export class CacheManager<T = any> {
   private cache: Map<string, CacheEntry<T>>;
   private config: Required<CacheConfig>;
@@ -169,4 +172,5 @@ export class CacheManager<T = any> {
   }
 }
 
+// Export secure cache implementation
 export { SecureCache } from './secure';

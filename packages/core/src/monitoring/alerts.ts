@@ -1,7 +1,10 @@
 import { ChainType } from '../config/types';
-import { logger } from './logger';
+import { Logger } from './logger';
 import { messagingMiddleware } from '../messaging';
 import { EventType } from '../messaging/types';
+
+// 创建 logger 实例
+const logger = Logger.getInstance();
 
 // 告警级别
 export enum AlertSeverity {

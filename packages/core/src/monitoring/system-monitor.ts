@@ -1,12 +1,17 @@
-import { logger } from './logger';
-import { metricsService } from './metrics';
+import { Logger } from './logger';
+import { MetricsService } from './metrics';
 import { AlertManager, AlertType, AlertSeverity } from './alerts';
 import { configManager } from '../config';
 import { messagingMiddleware } from '../messaging';
 import { EventType } from '../messaging/types';
-import { databaseManager } from '../database';
+import { DatabaseManager } from '../database';
 import { chainAdapterFactory } from '../chain';
 import os from 'os';
+import { SystemMetrics } from './types';
+
+// 创建实例
+const logger = Logger.getInstance();
+const metricsService = MetricsService.getInstance();
 
 export interface SystemStatus {
   healthy: boolean;
@@ -33,74 +38,6 @@ export interface SystemStatus {
     network: {
       in: number;
       out: number;
-    };
-  };
-}
-
-export interface SystemMetrics {
-  cpu: {
-    usage: number;
-    loadAverage: number[];
-    cores: number;
-    speed: number;
-  };
-  memory: {
-    total: number;
-    used: number;
-    free: number;
-    usage: number;
-    swap: {
-      total: number;
-      used: number;
-      free: number;
-    };
-  };
-  disk: {
-    total: number;
-    used: number;
-    free: number;
-    usage: number;
-    io: {
-      reads: number;
-      writes: number;
-    };
-  };
-  network: {
-    bytesIn: number;
-    bytesOut: number;
-    packetsIn: number;
-    packetsOut: number;
-    errors: number;
-    dropped: number;
-    interfaces: Array<{
-      name: string;
-      bytesIn: number;
-      bytesOut: number;
-      status: string;
-    }>;
-  };
-  process: {
-    uptime: number;
-    memoryUsage: NodeJS.MemoryUsage;
-    cpuUsage: NodeJS.CpuUsage;
-    handles: number;
-    threads: number;
-  };
-  services: {
-    database: {
-      connections: number;
-      queriesPerSecond: number;
-      latency: number;
-    };
-    cache: {
-      size: number;
-      hitRate: number;
-      missRate: number;
-    };
-    messaging: {
-      queueSize: number;
-      processRate: number;
-      errorRate: number;
     };
   };
 }

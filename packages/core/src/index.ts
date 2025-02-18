@@ -13,6 +13,18 @@ export * from './dialogue';
 export * from './cache';
 export * from './database';
 
+// Monitoring and metrics
+export * from './monitoring';
+
+// Chain adapters
+export * from './chain';
+
+// Configuration
+export * from './config';
+
+// Messaging
+export * from './messaging';
+
 // Knowledge management
 export {
   KnowledgeManager,
