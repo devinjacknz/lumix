@@ -13,6 +13,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@aws-sdk/client-kms": "^3.750.0",
     "@lumix/adapter-sqlite": "workspace:*",
     "@lumix/types": "workspace:*",
     "cron-parser": "^5.0.1",
