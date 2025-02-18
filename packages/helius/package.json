@@ -1,0 +1,27 @@
+{
+  "name": "@lumix/helius",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "clean": "rimraf dist",
+    "lint": "eslint src --ext .ts",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@lumix/core": "workspace:*",
+    "@solana/web3.js": "^1.87.6",
+    "node-fetch": "^3.3.2",
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.19",
+    "@types/ws": "^8.5.4",
+    "eslint": "^8.56.0",
+    "tsup": "^8.0.2",
+    "typescript": "^5.3.3"
+  }
+}

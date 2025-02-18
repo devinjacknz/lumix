@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@lumix/types": ["../types/src"]
+    }
+  },
+  "include": ["src/**/*"],
+  "references": [
+    { "path": "../types" }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "lib": ["ES2020", "DOM"],
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "composite": true,
+    "baseUrl": ".",
+    "paths": {
+      "@lumix/*": ["packages/*/src"]
+    }
+  },
+  "references": [
+    { "path": "packages/core" },
+    { "path": "packages/models" },
+    { "path": "packages/helius" },
+    { "path": "packages/tools" },
+    { "path": "packages/agent" },
+    { "path": "packages/plugin-edwin" },
+    { "path": "packages/plugin-token-analyzer" },
+    { "path": "packages/plugin-strategy-agent" },
+    { "path": "packages/plugin-solana-v2" },
+    { "path": "packages/plugin-solana" },
+    { "path": "packages/plugin-pyth-data" },
+    { "path": "packages/plugin-news" },
+    { "path": "packages/plugin-dexscreener" },
+    { "path": "packages/adapter-sqlite" },
+    { "path": "packages/plugin-defi-crawler" }
+  ],
+  "exclude": ["node_modules", "dist"]
+}
