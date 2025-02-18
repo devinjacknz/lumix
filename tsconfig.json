@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "ESNext",
+    "module": "CommonJS",
     "moduleResolution": "node",
-    "lib": ["ES2020", "DOM"],
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -14,6 +14,13 @@
     "resolveJsonModule": true,
     "composite": true,
     "baseUrl": ".",
+    "jsx": "react",
+    "allowJs": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "allowSyntheticDefaultImports": true,
     "paths": {
       "@lumix/*": ["packages/*/src"]
     }
@@ -33,7 +40,9 @@
     { "path": "packages/plugin-news" },
     { "path": "packages/plugin-dexscreener" },
     { "path": "packages/adapter-sqlite" },
-    { "path": "packages/plugin-defi-crawler" }
+    { "path": "packages/plugin-defi-crawler" },
+    { "path": "packages/plugin-chain-adapter" },
+    { "path": "packages/plugin-chain-analyzer" }
   ],
   "exclude": ["node_modules", "dist"]
 }

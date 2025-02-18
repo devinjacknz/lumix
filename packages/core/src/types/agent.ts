@@ -6,10 +6,13 @@ export interface AgentConfig {
   model?: string;
 }
 
+export type ConsultationMode = 'beginner' | 'expert';
+
 export interface AgentOptions {
   config: AgentConfig;
-  tools?: any[];
+  tools?: StructuredTool[];
   systemPrompt?: string;
+  consultationMode?: ConsultationMode;
 }
 
 export class AgentError extends Error {

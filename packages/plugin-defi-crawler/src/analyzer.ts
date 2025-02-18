@@ -9,16 +9,41 @@ import {
   LiquidityAnalysis,
   MarketMetrics
 } from './types';
+import { ChainAdapter, ChainProtocol, AnalysisResult } from '@lumix/plugin-chain-adapter';
+import { KnowledgeStats } from '@lumix/core';
 
 export class DeFiAnalyzer {
   private knowledgeBase: KnowledgeBase;
   private nebulaPlugin?: NebulaPlugin;
+  private chainAdapters: Map<ChainProtocol, ChainAdapter>;
+  private analyzers: Map<ChainProtocol, any>;
+  private knowledgeStats: KnowledgeStats;
   
-  constructor(private provider: ethers.providers.Provider) {}
+  constructor(private provider: ethers.providers.Provider, adapters: ChainAdapter[]) {
+    this.chainAdapters = new Map();
+    this.analyzers = new Map();
+    this.knowledgeStats = new KnowledgeStats();
+    
+    adapters.forEach(adapter => {
+      this.chainAdapters.set(adapter.protocol, adapter);
+      
+      // 初始化对应链的分析器
+      if (adapter.protocol === ChainProtocol.SOLANA) {
+        // 动态导入 Solana 分析器
+        import('@lumix/plugin-chain-analyzer/solana').then(({ SolanaAnalyzer }) => {
+          this.analyzers.set(adapter.protocol, new SolanaAnalyzer(adapter));
+        });
+      }
+      // 添加其他链的支持
+    });
+  }
 
   async initialize(manager: PluginManager) {
     this.knowledgeBase = manager.getKnowledgeBase();
     this.nebulaPlugin = manager.getPlugin('nebula') as NebulaPlugin;
+    if (!this.nebulaPlugin) {
+      throw new Error('Nebula plugin not found');
+    }
   }
 
   async analyzeContract(address: string): Promise<ContractAnalysisResult> {
@@ -305,6 +330,47 @@ export class DeFiAnalyzer {
       correlation: 0,
       momentum: 0,
       // 添加更多指标
+    };
+  }
+
+  async analyzeProtocol(address: string, protocol: ChainProtocol): Promise<AnalysisResult> {
+    const analyzer = this.analyzers.get(protocol);
+    if (!analyzer) {
+      throw new Error(`Analyzer not found for protocol: ${protocol}`);
+    }
+
+    return analyzer.analyzeContract(address);
+  }
+
+  async analyzeLiquidity(address: string, protocol: ChainProtocol): Promise<any> {
+    const adapter = this.chainAdapters.get(protocol);
+    if (!adapter) {
+      throw new Error(`Chain adapter not found for protocol: ${protocol}`);
+    }
+
+    // 获取流动性数据
+    const balance = await adapter.getBalance(address);
+    const code = await adapter.getCode(address);
+
+    // TODO: 实现具体的流动性分析逻辑
+    return {
+      balance,
+      hasCode: code !== '0x',
+      // 添加更多分析结果
+    };
+  }
+
+  async analyzeTransactionFlow(txHash: string, protocol: ChainProtocol): Promise<any> {
+    const adapter = this.chainAdapters.get(protocol);
+    if (!adapter) {
+      throw new Error(`Chain adapter not found for protocol: ${protocol}`);
+    }
+
+    const tx = await adapter.getTransaction(txHash);
+    // TODO: 实现交易流分析逻辑
+    return {
+      tx,
+      // 添加更多分析结果
     };
   }
 }

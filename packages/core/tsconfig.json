@@ -1,13 +1,15 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "composite": true,
-    "preserveSymlinks": true
+    "baseUrl": ".",
+    "paths": {
+      "@lumix/types": ["../types/src"]
+    }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
   "references": [
-    { "path": "../adapter-sqlite" }
+    { "path": "../types" }
   ]
 }

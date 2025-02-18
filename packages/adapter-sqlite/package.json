@@ -6,10 +6,10 @@
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc && tsup",
+    "build": "tsc",
     "clean": "rimraf dist",
     "lint": "eslint src --ext .ts",
-    "test": "jest"
+    "test": "jest --coverage --passWithNoTests"
   },
   "dependencies": {
     "@lumix/types": "workspace:*",

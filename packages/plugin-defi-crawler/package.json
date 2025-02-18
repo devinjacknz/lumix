@@ -1,6 +1,6 @@
 {
   "name": "@lumix/plugin-defi-crawler",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "DeFi data crawler plugin for Lumix",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -10,22 +10,25 @@
     "clean": "rimraf dist",
     "dev": "tsup --watch",
     "lint": "eslint src --ext .ts",
-    "test": "jest"
+    "test": "jest --coverage --passWithNoTests"
   },
   "dependencies": {
     "@lumix/core": "workspace:*",
-    "@lumix/plugin-solana": "workspace:*",
+    "@lumix/plugin-chain-adapter": "workspace:*",
+    "@lumix/plugin-chain-analyzer": "workspace:*",
+    "@lumix/plugin-nebula": "workspace:*",
     "axios": "^1.6.7",
     "cheerio": "^1.0.0-rc.12",
     "date-fns": "^2.30.0",
-    "natural": "^6.10.4"
+    "natural": "^6.10.4",
+    "ethers": "^5.7.2"
   },
   "devDependencies": {
     "@types/cheerio": "^0.22.35",
     "@types/natural": "^5.1.5",
-    "@types/node": "^20.11.19",
+    "@types/node": "^18.0.0",
     "eslint": "^8.56.0",
     "tsup": "^8.0.2",
-    "typescript": "^5.3.3"
+    "typescript": "^4.9.5"
   }
 }

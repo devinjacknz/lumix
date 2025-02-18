@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { BaseSQLiteAdapter, SQLiteConfig, SQLiteError } from './base';
 import { DialogueMessage, DialogueContext } from '@lumix/types';
+import { BaseSQLiteAdapter, SQLiteConfig, SQLiteError } from './base';
 
 export interface DialogHistoryManager {
   saveMessage(message: DialogueMessage): Promise<void>;
@@ -49,4 +49,4 @@ export class SQLiteDialogHistoryManager extends BaseSQLiteAdapter implements Dia
   }
 }
 
-export { SQLiteConfig, BaseSQLiteAdapter, SQLiteError };
+export { BaseSQLiteAdapter, SQLiteConfig, SQLiteError };

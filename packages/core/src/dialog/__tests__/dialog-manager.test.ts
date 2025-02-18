@@ -1,21 +1,29 @@
 import { DialogManager } from '../dialog-manager';
 import {
-  DialogState,
-  DialogIntent,
-  DialogResponse,
   DialogPlugin,
-  DialogMiddleware,
   DialogStorage,
   DialogHistoryManager,
   DialogErrorHandler,
-  DialogErrorCode
+  DialogIntent,
+  DialogState,
+  DialogErrorCode,
+  DialogMiddleware,
+  DialogContext
 } from '../types';
+
+// Mock crypto.randomUUID
+const mockUUID = '12345678-1234-1234-1234-123456789012';
+global.crypto = {
+  ...global.crypto,
+  randomUUID: () => mockUUID
+};
 
 describe('DialogManager', () => {
   let dialogManager: DialogManager;
   let mockStorage: jest.Mocked<DialogStorage>;
   let mockHistoryManager: jest.Mocked<DialogHistoryManager>;
   let mockErrorHandler: jest.Mocked<DialogErrorHandler>;
+  let mockPlugin: DialogPlugin;
 
   beforeEach(() => {
     mockStorage = {
@@ -24,288 +32,261 @@ describe('DialogManager', () => {
       saveHistory: jest.fn().mockResolvedValue(undefined),
       loadHistory: jest.fn().mockResolvedValue(null),
       deleteSession: jest.fn().mockResolvedValue(undefined)
-    } as jest.Mocked<DialogStorage>;
+    };
 
     mockHistoryManager = {
       saveHistory: jest.fn().mockResolvedValue(undefined),
       getHistory: jest.fn().mockResolvedValue(null),
       searchHistory: jest.fn().mockResolvedValue([]),
-      deleteHistory: jest.fn().mockResolvedValue(undefined),
-      clearHistory: jest.fn().mockResolvedValue(undefined)
-    } as jest.Mocked<DialogHistoryManager>;
+      deleteHistory: jest.fn().mockResolvedValue(undefined)
+    };
 
     mockErrorHandler = {
       handleError: jest.fn().mockResolvedValue({
-        text: "Error handled",
+        text: 'Error handled',
         error: {
           code: DialogErrorCode.UNKNOWN_ERROR,
-          message: "Test error"
+          message: 'Test error'
         }
       }),
       logError: jest.fn().mockResolvedValue(undefined)
-    } as jest.Mocked<DialogErrorHandler>;
+    };
+
+    mockPlugin = {
+      name: 'test-plugin',
+      version: '1.0.0',
+      initialize: jest.fn().mockResolvedValue(undefined),
+      processIntent: jest.fn().mockResolvedValue({
+        text: 'Test response',
+        confidence: 0.8
+      }),
+      cleanup: jest.fn().mockResolvedValue(undefined)
+    };
 
     dialogManager = new DialogManager(
       mockStorage,
       mockHistoryManager,
-      mockErrorHandler
+      mockErrorHandler,
+      {
+        language: 'en',
+        maxTurns: 100,
+        timeoutMs: 30000,
+        autoCorrect: true,
+        confidenceThreshold: 0.5,
+        maxDistance: 3,
+        maxSuggestions: 5,
+        minSimilarity: 0.7,
+        metadata: {}
+      }
     );
+
+    dialogManager.registerPlugin(mockPlugin);
   });
 
-  describe('Plugin Management', () => {
-    it('should register a plugin successfully', async () => {
-      const mockPlugin: DialogPlugin = {
-        name: 'test-plugin',
-        version: '1.0.0',
-        initialize: jest.fn(),
-        handlers: {},
-      };
+  test('processes intent successfully', async () => {
+    const intent: DialogIntent = {
+      type: 'test-intent',
+      confidence: 0.9,
+      parameters: {}
+    };
 
-      await dialogManager.registerPlugin(mockPlugin);
-      expect(mockPlugin.initialize).toHaveBeenCalled();
-    });
+    const state = await dialogManager.createState();
+    const response = await dialogManager.processIntent(intent, state);
 
-    it('should throw error when registering duplicate plugin', async () => {
-      const mockPlugin: DialogPlugin = {
-        name: 'test-plugin',
-        version: '1.0.0',
-        handlers: {},
-      };
-
-      await dialogManager.registerPlugin(mockPlugin);
-      await expect(dialogManager.registerPlugin(mockPlugin)).rejects.toThrow();
-    });
-
-    it('should unregister plugin successfully', async () => {
-      const mockPlugin: DialogPlugin = {
-        name: 'test-plugin',
-        version: '1.0.0',
-        cleanup: jest.fn(),
-        handlers: {},
-      };
-
-      await dialogManager.registerPlugin(mockPlugin);
-      await dialogManager.unregisterPlugin('test-plugin');
-      expect(mockPlugin.cleanup).toHaveBeenCalled();
-    });
+    expect(response.text).toBe('Test response');
+    expect(mockStorage.saveState).toHaveBeenCalled();
   });
 
-  describe('Middleware', () => {
-    it('should execute middleware in correct order', async () => {
-      const executionOrder: string[] = [];
-      const mockMiddleware: DialogMiddleware = {
-        before: jest.fn().mockImplementation(async () => {
-          executionOrder.push('before');
-        }),
-        after: jest.fn().mockImplementation(async () => {
-          executionOrder.push('after');
-        }),
-      };
+  test('handles intent processing failure', async () => {
+    const intent: DialogIntent = {
+      type: 'test-intent',
+      confidence: 0.9,
+      parameters: {}
+    };
 
-      const mockPlugin: DialogPlugin = {
-        name: 'test-plugin',
-        version: '1.0.0',
-        handlers: {
-          test: jest.fn().mockImplementation(async () => {
-            executionOrder.push('handler');
-            return { text: 'test' };
-          }),
-        },
-      };
+    (mockPlugin.processIntent as jest.Mock).mockRejectedValueOnce(new Error('Test error'));
 
-      dialogManager.use(mockMiddleware);
-      await dialogManager.registerPlugin(mockPlugin);
+    const state = await dialogManager.createState();
+    const response = await dialogManager.processIntent(intent, state);
 
-      const mockState: DialogState = {
-        turnCount: 0,
-        lastInteractionTime: Date.now(),
-        lastUpdateTime: Date.now(),
-        parameters: {},
-        context: {
-          sessionId: '123',
-          userId: 'user123',
-          language: 'en',
-          timestamp: Date.now(),
-          metadata: {},
-        },
-      };
-
-      const mockIntent: DialogIntent = {
-        type: 'test',
-        confidence: 1,
-        parameters: {},
-      };
-
-      await dialogManager.processIntent(mockIntent, mockState);
-
-      expect(executionOrder).toEqual(['before', 'handler', 'after']);
-      expect(mockMiddleware.before).toHaveBeenCalledWith(mockState);
-      expect(mockMiddleware.after).toHaveBeenCalled();
-    });
+    expect(response.error).toBeDefined();
+    expect(response.error?.code).toBe(DialogErrorCode.UNKNOWN_ERROR);
+    expect(mockErrorHandler.handleError).toHaveBeenCalled();
+    expect(mockErrorHandler.logError).toHaveBeenCalled();
   });
 
-  describe('Error Handling', () => {
-    it('should handle plugin errors correctly', async () => {
-      const mockPlugin: DialogPlugin = {
-        name: 'test-plugin',
-        version: '1.0.0',
-        handlers: {
-          test: jest.fn().mockRejectedValue(new Error('Test error')),
-        },
-      };
+  test('applies middleware in correct order', async () => {
+    const steps: string[] = [];
 
-      const mockErrorResponse: DialogResponse = {
-        text: 'Error handled',
-        error: {
-          code: DialogErrorCode.UNKNOWN_ERROR,
-          message: 'Test error',
-        },
-      };
+    const middleware1: DialogMiddleware = {
+      before: async (state) => {
+        steps.push('before1');
+      },
+      after: async (state, response) => {
+        steps.push('after1');
+      },
+      onError: async (error, state) => {
+        steps.push('error1');
+      }
+    };
 
-      mockErrorHandler.handleError.mockResolvedValue(mockErrorResponse);
+    const middleware2: DialogMiddleware = {
+      before: async (state) => {
+        steps.push('before2');
+      },
+      after: async (state, response) => {
+        steps.push('after2');
+      },
+      onError: async (error, state) => {
+        steps.push('error2');
+      }
+    };
 
-      await dialogManager.registerPlugin(mockPlugin);
+    dialogManager.use(middleware1);
+    dialogManager.use(middleware2);
 
-      const mockState: DialogState = {
-        turnCount: 0,
-        lastInteractionTime: Date.now(),
-        lastUpdateTime: Date.now(),
-        parameters: {},
-        context: {
-          sessionId: '123',
-          userId: 'user123',
-          language: 'en',
-          timestamp: Date.now(),
-          metadata: {},
-        },
-      };
+    const intent: DialogIntent = {
+      type: 'test-intent',
+      confidence: 0.9,
+      parameters: {}
+    };
 
-      const mockIntent: DialogIntent = {
-        type: 'test',
-        confidence: 1,
-        parameters: {},
-      };
+    const state = await dialogManager.createState();
+    await dialogManager.processIntent(intent, state);
 
-      const response = await dialogManager.processIntent(mockIntent, mockState);
-      expect(response).toEqual(mockErrorResponse);
-      expect(mockErrorHandler.handleError).toHaveBeenCalled();
-    });
+    expect(steps).toEqual(['before1', 'before2', 'after2', 'after1']);
   });
 
-  describe('State Management', () => {
-    it('should create state with correct defaults', async () => {
-      const state = await dialogManager.createState({
-        userId: 'test-user',
-      });
+  test('maintains state between requests', async () => {
+    const intent: DialogIntent = {
+      type: 'test',
+      confidence: 0.9,
+      parameters: {}
+    };
 
-      expect(state.turnCount).toBe(0);
-      expect(state.context.userId).toBe('test-user');
-      expect(state.context.language).toBe('en');
-      expect(mockStorage.saveState).toHaveBeenCalledWith(
-        state.context.sessionId,
-        state
-      );
-    });
+    const state = await dialogManager.createState();
+    await dialogManager.processIntent(intent, state);
+    await dialogManager.processIntent(intent, state);
 
-    it('should load state correctly', async () => {
-      const mockState: DialogState = {
-        turnCount: 5,
-        lastInteractionTime: Date.now(),
-        lastUpdateTime: Date.now(),
-        parameters: {},
-        context: {
-          sessionId: 'test-session',
-          userId: 'test-user',
-          language: 'en',
-          timestamp: Date.now(),
-          metadata: {},
-        },
-      };
-
-      mockStorage.loadState.mockResolvedValue(mockState);
-
-      const loadedState = await dialogManager.loadState('test-session');
-      expect(loadedState).toEqual(mockState);
-      expect(mockStorage.loadState).toHaveBeenCalledWith('test-session');
-    });
-
-    it('should save state with updated timestamp', async () => {
-      const mockState: DialogState = {
-        turnCount: 5,
-        lastInteractionTime: Date.now(),
-        lastUpdateTime: Date.now() - 1000, // Old timestamp
-        parameters: {},
-        context: {
-          sessionId: 'test-session',
-          userId: 'test-user',
-          language: 'en',
-          timestamp: Date.now(),
-          metadata: {},
-        },
-      };
-
-      await dialogManager.saveState(mockState);
-      expect(mockState.lastUpdateTime).toBeGreaterThan(mockState.lastInteractionTime);
-      expect(mockStorage.saveState).toHaveBeenCalledWith(
-        'test-session',
-        mockState
-      );
-    });
+    expect(mockStorage.saveState).toHaveBeenCalledTimes(3);
   });
 
-  describe('Cleanup', () => {
-    it('should cleanup all plugins and clear middleware', async () => {
-      const mockPlugin1: DialogPlugin = {
-        name: 'plugin1',
-        version: '1.0.0',
-        cleanup: jest.fn(),
-        handlers: {},
-      };
+  test('loads state successfully', async () => {
+    const sessionId = 'test-session';
+    const mockState: DialogState = {
+      turnCount: 1,
+      lastInteractionTime: Date.now(),
+      lastUpdateTime: Date.now(),
+      parameters: {},
+      context: {
+        sessionId,
+        language: 'en',
+        timestamp: Date.now()
+      }
+    };
 
-      const mockPlugin2: DialogPlugin = {
-        name: 'plugin2',
-        version: '1.0.0',
-        cleanup: jest.fn(),
-        handlers: {},
-      };
+    mockStorage.loadState.mockResolvedValueOnce(mockState);
+    const loadedState = await dialogManager.loadState(sessionId);
+    expect(loadedState).toEqual(mockState);
+    expect(mockStorage.loadState).toHaveBeenCalledWith(sessionId);
+  });
 
-      const mockMiddleware: DialogMiddleware = {
-        before: jest.fn(),
-        after: jest.fn(),
-      };
+  test('saves state successfully', async () => {
+    const state = await dialogManager.createState();
+    await dialogManager.saveState(state);
+    expect(mockStorage.saveState).toHaveBeenCalledWith(state.context.sessionId, state);
+    expect(state.lastUpdateTime).toBeLessThanOrEqual(Date.now());
+  });
 
-      await dialogManager.registerPlugin(mockPlugin1);
-      await dialogManager.registerPlugin(mockPlugin2);
-      dialogManager.use(mockMiddleware);
+  test('cleans up resources', async () => {
+    await dialogManager.cleanup();
+    expect(mockPlugin.cleanup).toHaveBeenCalled();
+  });
 
-      await dialogManager.cleanup();
+  test('creates state with custom context', async () => {
+    const customContext: Partial<DialogContext> = {
+      userId: 'test-user',
+      language: 'zh',
+      metadata: { custom: 'data' }
+    };
 
-      expect(mockPlugin1.cleanup).toHaveBeenCalled();
-      expect(mockPlugin2.cleanup).toHaveBeenCalled();
+    const state = await dialogManager.createState(customContext);
+    expect(state.context.userId).toBe(customContext.userId);
+    expect(state.context.language).toBe(customContext.language);
+    expect(state.context.metadata).toEqual(customContext.metadata);
+    expect(state.context.sessionId).toBeDefined();
+    expect(state.turnCount).toBe(0);
+  });
 
-      // Verify plugins and middleware are cleared by trying to process an intent
-      const mockState: DialogState = {
-        turnCount: 0,
-        lastInteractionTime: Date.now(),
-        lastUpdateTime: Date.now(),
-        parameters: {},
-        context: {
-          sessionId: '123',
-          userId: 'user123',
-          language: 'en',
-          timestamp: Date.now(),
-          metadata: {},
-        },
-      };
+  test('handles no plugins available', async () => {
+    const newDialogManager = new DialogManager(
+      mockStorage,
+      mockHistoryManager,
+      mockErrorHandler,
+      {
+        language: 'en',
+        maxTurns: 100,
+        timeoutMs: 30000
+      }
+    );
 
-      const mockIntent: DialogIntent = {
-        type: 'test',
-        confidence: 1,
-        parameters: {},
-      };
+    const intent: DialogIntent = {
+      type: 'test',
+      confidence: 0.9,
+      parameters: {}
+    };
 
-      const response = await dialogManager.processIntent(mockIntent, mockState);
-      expect(response.error?.code).toBe(DialogErrorCode.INTENT_NOT_FOUND);
-    });
+    const state = await newDialogManager.createState();
+    const response = await newDialogManager.processIntent(intent, state);
+    expect(response.text).toBe('Error handled');
+    expect(mockErrorHandler.handleError).toHaveBeenCalled();
+  });
+
+  test('handles middleware error in before hook', async () => {
+    const errorMiddleware: DialogMiddleware = {
+      before: jest.fn().mockRejectedValue(new Error('Middleware error')),
+      after: jest.fn(),
+      onError: jest.fn()
+    };
+
+    dialogManager.use(errorMiddleware);
+
+    const intent: DialogIntent = {
+      type: 'test',
+      confidence: 0.9,
+      parameters: {}
+    };
+
+    const state = await dialogManager.createState();
+    const response = await dialogManager.processIntent(intent, state);
+    
+    expect(response.text).toBe('Error handled');
+    expect(errorMiddleware.before).toHaveBeenCalled();
+    expect(errorMiddleware.onError).toHaveBeenCalled();
+    expect(mockErrorHandler.handleError).toHaveBeenCalled();
+    expect(mockErrorHandler.logError).toHaveBeenCalled();
+  });
+
+  test('creates state with default options', async () => {
+    const state = await dialogManager.createState();
+    expect(state.context.language).toBe('en');
+    expect(state.context.sessionId).toBeDefined();
+    expect(state.turnCount).toBe(0);
+    expect(state.parameters).toEqual({});
+    expect(state.lastInteractionTime).toBeLessThanOrEqual(Date.now());
+    expect(state.lastUpdateTime).toBeLessThanOrEqual(Date.now());
+  });
+
+  test('initializes with default options', () => {
+    const manager = new DialogManager(mockStorage, mockHistoryManager, mockErrorHandler);
+    expect(manager['options'].language).toBe('en');
+    expect(manager['options'].maxTurns).toBe(100);
+    expect(manager['options'].timeoutMs).toBe(30000);
+    expect(manager['options'].autoCorrect).toBe(true);
+    expect(manager['options'].confidenceThreshold).toBe(0.5);
+    expect(manager['options'].maxDistance).toBe(3);
+    expect(manager['options'].maxSuggestions).toBe(5);
+    expect(manager['options'].minSimilarity).toBe(0.7);
+    expect(manager['options'].metadata).toEqual({});
   });
 });

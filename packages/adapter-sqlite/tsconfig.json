@@ -6,12 +6,14 @@
     "composite": true,
     "declaration": true,
     "declarationMap": true,
+    "module": "CommonJS",
+    "target": "ES2020",
     "baseUrl": ".",
     "paths": {
-      "@lumix/types": ["../types/src"]
+      "@lumix/types": ["../../packages/types/src"]
     }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
   "references": [
     { "path": "../types" }
   ]

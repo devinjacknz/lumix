@@ -36,38 +36,60 @@ export interface AccountState {
   storageRoot: Buffer;
 }
 
+export interface StateSnapshot {
+  id: string;
+  timestamp: number;
+  stateRoot: Buffer;
+  accounts: Map<string, AccountState>;
+}
+
+export interface SimulationResult extends TransactionResult {
+  stateChanges: {
+    address: string;
+    beforeState: AccountState;
+    afterState: AccountState;
+  }[];
+  storageChanges: {
+    address: string;
+    key: Buffer;
+    beforeValue: Buffer;
+    afterValue: Buffer;
+  }[];
+}
+
 export class EVMSandbox {
-  private vm: VM;
+  private vm!: VM;
   private common: Common;
   private config: Required<EVMSandboxConfig>;
   private gasPredictor: GasPredictor;
+  private snapshots: Map<string, StateSnapshot>;
+  private currentSnapshotId: string | null;
 
   constructor(config: EVMSandboxConfig) {
     this.config = {
       chainId: config.chainId,
-      hardfork: config.hardfork || 'shanghai',
+      hardfork: config.hardfork || 'london',
       stateRoot: config.stateRoot || Buffer.alloc(32),
       debug: config.debug || false
     };
 
-    this.common = new Common({
-      chain: this.config.chainId,
-      hardfork: this.config.hardfork
-    });
+    this.common = new Common({ chain: this.config.chainId, hardfork: this.config.hardfork });
+    this.snapshots = new Map();
+    this.currentSnapshotId = null;
+    this.gasPredictor = new GasPredictor(this);
 
+    if (this.config.debug) {
+      this.setupDebugHooks();
+    }
+  }
+
+  async initialize(): Promise<void> {
     const stateManager = new DefaultStateManager();
-    
     this.vm = await VM.create({
       common: this.common,
       stateManager,
       hardfork: this.config.hardfork
     });
-
-    this.gasPredictor = new GasPredictor();
-
-    if (this.config.debug) {
-      this.setupDebugHooks();
-    }
   }
 
   /**
@@ -304,5 +326,163 @@ export class EVMSandbox {
     }
 
     return Array.from(stats.values());
+  }
+
+  /**
+   * 创建当前状态的快照
+   */
+  async createSnapshot(id?: string): Promise<string> {
+    try {
+      const snapshotId = id || `snapshot-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const stateRoot = await this.vm.stateManager.getStateRoot();
+      
+      // 获取所有已修改账户的状态
+      const accounts = new Map();
+      const touchedAddresses = await this.vm.stateManager.getTouchedAccounts();
+      
+      for (const address of touchedAddresses) {
+        const state = await this.getAccountState(address);
+        accounts.set(address.toString(), state);
+      }
+
+      const snapshot: StateSnapshot = {
+        id: snapshotId,
+        timestamp: Date.now(),
+        stateRoot,
+        accounts
+      };
+
+      this.snapshots.set(snapshotId, snapshot);
+      this.currentSnapshotId = snapshotId;
+
+      return snapshotId;
+    } catch (error) {
+      throw new EVMError(`Failed to create snapshot: ${error.message}`);
+    }
+  }
+
+  /**
+   * 恢复到指定的快照状态
+   */
+  async revertToSnapshot(id: string): Promise<void> {
+    try {
+      const snapshot = this.snapshots.get(id);
+      if (!snapshot) {
+        throw new EVMError(`Snapshot ${id} not found`);
+      }
+
+      // 恢复状态根
+      await this.vm.stateManager.setStateRoot(snapshot.stateRoot);
+
+      // 恢复账户状态
+      for (const [address, state] of snapshot.accounts) {
+        const addr = Address.fromString(address);
+        await this.setAccountState(addr, state);
+      }
+
+      this.currentSnapshotId = id;
+    } catch (error) {
+      throw new EVMError(`Failed to revert to snapshot: ${error.message}`);
+    }
+  }
+
+  /**
+   * 模拟执行交易并返回详细结果
+   */
+  async simulateTx(
+    txData: string | Buffer | Transaction,
+    snapshotId?: string
+  ): Promise<SimulationResult> {
+    try {
+      // 如果提供了快照ID,先恢复到该状态
+      if (snapshotId) {
+        await this.revertToSnapshot(snapshotId);
+      }
+
+      // 创建新快照用于回滚
+      const tempSnapshotId = await this.createSnapshot();
+
+      // 记录交易涉及的账户初始状态
+      const tx = this.normalizeTx(txData);
+      const addresses = new Set<string>();
+      addresses.add(tx.getSenderAddress().toString());
+      if (tx.to) addresses.add(tx.to.toString());
+
+      const beforeStates = new Map();
+      for (const addr of addresses) {
+        beforeStates.set(addr, await this.getAccountState(addr));
+      }
+
+      // 执行交易
+      const result = await this.executeTx(tx);
+
+      // 收集状态变化
+      const stateChanges = [];
+      const storageChanges = [];
+
+      for (const addr of addresses) {
+        const afterState = await this.getAccountState(addr);
+        const beforeState = beforeStates.get(addr);
+
+        stateChanges.push({
+          address: addr,
+          beforeState,
+          afterState
+        });
+
+        // 收集存储变化
+        if (afterState.codeHash.length > 0) {
+          const storage = await this.vm.stateManager.dumpStorage(Address.fromString(addr));
+          for (const [key, value] of storage) {
+            const beforeValue = await this.vm.stateManager.getContractStorage(
+              Address.fromString(addr),
+              toBuffer(key)
+            );
+            if (!beforeValue.equals(value)) {
+              storageChanges.push({
+                address: addr,
+                key: toBuffer(key),
+                beforeValue,
+                afterValue: value
+              });
+            }
+          }
+        }
+      }
+
+      // 恢复到执行前的状态
+      await this.revertToSnapshot(tempSnapshotId);
+
+      return {
+        ...result,
+        stateChanges,
+        storageChanges
+      };
+    } catch (error) {
+      throw new EVMError(`Failed to simulate transaction: ${error.message}`);
+    }
+  }
+
+  /**
+   * 删除快照
+   */
+  deleteSnapshot(id: string): boolean {
+    return this.snapshots.delete(id);
+  }
+
+  /**
+   * 获取当前快照ID
+   */
+  getCurrentSnapshotId(): string | null {
+    return this.currentSnapshotId;
+  }
+
+  private normalizeTx(txData: string | Buffer | Transaction): Transaction {
+    if (typeof txData === 'string') {
+      return Transaction.fromSerializedTx(toBuffer(txData), { common: this.common });
+    } else if (Buffer.isBuffer(txData)) {
+      return Transaction.fromSerializedTx(txData, { common: this.common });
+    }
+    return txData;
   }
 } 

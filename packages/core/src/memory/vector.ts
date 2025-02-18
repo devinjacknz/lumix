@@ -1,4 +1,9 @@
 import { Vector, DistanceMetric } from '@lumix/types';
+import { VectorStore } from '@langchain/core/vectorstores';
+import { Embeddings } from '@langchain/core/embeddings';
+import { Document } from '@langchain/core/documents';
+import { InputValues, MemoryVariables } from '@langchain/core/memory';
+import { BaseMemorySystem, MemoryConfig } from './base';
 
 /**
  * 向量操作错误类
@@ -186,5 +191,127 @@ export function calculateDistance(a: Vector, b: Vector, metric: DistanceMetric =
       return manhattanDistance(a, b);
     default:
       throw new Error(`Unsupported distance metric: ${metric}`);
+  }
+}
+
+/**
+ * 向量记忆配置
+ */
+export interface VectorMemoryConfig extends MemoryConfig {
+  vectorStore?: VectorStore;
+  embeddings?: Embeddings;
+  namespace?: string;
+}
+
+/**
+ * 基于向量存储的记忆系统
+ */
+export class VectorMemorySystem extends BaseMemorySystem {
+  private vectorStore: VectorStore;
+  private embeddings: Embeddings;
+  private namespace: string;
+
+  constructor(config: VectorMemoryConfig) {
+    super(config);
+    
+    if (!config.vectorStore) {
+      throw new Error('Vector store is required for VectorMemorySystem');
+    }
+    if (!config.embeddings) {
+      throw new Error('Embeddings are required for VectorMemorySystem');
+    }
+
+    this.vectorStore = config.vectorStore;
+    this.embeddings = config.embeddings;
+    this.namespace = config.namespace || 'default';
+  }
+
+  /**
+   * 获取相关记忆
+   */
+  protected async getRelevantMemories(
+    values: InputValues
+  ): Promise<MemoryVariables[]> {
+    const input = values[this.config.inputKey];
+    
+    // 获取输入的向量表示
+    const queryEmbedding = await this.embeddings.embedQuery(input);
+    
+    // 搜索相似记忆
+    const results = await this.vectorStore.similaritySearch(
+      input,
+      this.config.maxRelevantDocs,
+      {
+        namespace: this.namespace,
+        minSimilarity: this.config.similarityThreshold
+      }
+    );
+
+    // 转换为记忆变量
+    return results.map(doc => this.documentToMemory(doc));
+  }
+
+  /**
+   * 添加记忆
+   */
+  protected async addMemory(input: string, output: string): Promise<void> {
+    const document = new Document({
+      pageContent: `${input}\n${output}`,
+      metadata: {
+        timestamp: Date.now(),
+        namespace: this.namespace
+      }
+    });
+
+    // 获取文档的向量表示
+    const embedding = await this.embeddings.embedDocuments([document.pageContent]);
+    
+    // 添加到向量存储
+    await this.vectorStore.addDocuments([document], {
+      embeddings: embedding[0],
+      namespace: this.namespace
+    });
+  }
+
+  /**
+   * 清理记忆
+   */
+  protected async clearMemories(): Promise<void> {
+    await this.vectorStore.delete({
+      namespace: this.namespace
+    });
+  }
+
+  /**
+   * 将文档转换为记忆变量
+   */
+  private documentToMemory(doc: Document): MemoryVariables {
+    const [input, output] = doc.pageContent.split('\n');
+    return {
+      input,
+      output,
+      timestamp: doc.metadata.timestamp
+    };
+  }
+
+  /**
+   * 更新向量存储
+   */
+  updateVectorStore(vectorStore: VectorStore): void {
+    this.vectorStore = vectorStore;
+  }
+
+  /**
+   * 更新嵌入模型
+   */
+  updateEmbeddings(embeddings: Embeddings): void {
+    this.embeddings = embeddings;
+  }
+
+  /**
+   * 更新命名空间
+   */
+  updateNamespace(namespace: string): void {
+    this.namespace = namespace;
   }
 }
