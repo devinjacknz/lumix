@@ -1,70 +1,93 @@
-// Base types and interfaces
-export * from './types/base';
-export * from './types/target';
-export * from './types/errors';
-
-// Dialog and consultation
-export * from './types/dialog';
-export * from './types/agent';
-
-// Core functionality
-export {
-  DialogueManager,
-  DialogueManagerConfig,
-  Message,
-  MessageRole
-} from './dialogue';
-
-export {
-  CacheManager,
-  SecureCache,
-  CacheError
-} from './cache';
-
-export {
-  DatabaseManager,
-  DatabaseConfig,
-  DatabaseError
-} from './database';
-
-// Monitoring and metrics
-export {
-  Logger,
-  MetricsService,
-  AlertManager,
-  SystemMonitor
-} from './monitoring';
-
-// Chain adapters
-export {
-  ChainAdapter,
-  EthereumAdapter,
-  SolanaAdapter
-} from './chain';
-
-// Configuration
-export {
-  ConfigManager,
-  ConfigError
-} from './config';
-
-// Messaging
-export {
-  MessagingMiddleware,
-  MiddlewareFunction
-} from './messaging';
-
-// Knowledge management
-export {
-  KnowledgeManager,
+// Types from @lumix/types
+export type {
+  // Base types
+  BaseConfig,
+  BaseResult,
+  BaseManager,
   KnowledgeItem,
   KnowledgeResult,
   KnowledgeRetrievalResult,
   KnowledgeRetrievalOptions,
   KnowledgeManagerConfig,
-  KnowledgeItemSchema,
-  KnowledgeRetrievalResultSchema,
-  KnowledgeManagerConfigSchema,
-  KnowledgeResultSchema,
-  KnowledgeRetrievalOptionsSchema
-} from './types/base';
+  // Database types
+  DatabaseConfig,
+  DatabaseAdapter,
+  // Chain types
+  ChainAdapter,
+  // Messaging types
+  MessagingMiddleware,
+  MiddlewareFunction,
+  // Dialogue types
+  DialogueMessage as Message,
+  MessageRole,
+  DialogueManagerConfig
+} from '@lumix/types';
+
+// Target types
+export type {
+  Target,
+  TargetType,
+  TargetStatus,
+  TargetPriority,
+  TargetRelation,
+  RelationType,
+  TargetQueryOptions
+} from './types/target';
+
+// Error types
+export type {
+  BaseError,
+  KnowledgeError,
+  ValidationError,
+  ConfigurationError,
+  StorageError,
+  RetrievalError,
+  ModelError,
+  ResourceLimitError,
+  PermissionError,
+  NetworkError,
+  TimeoutError,
+  ConcurrencyError,
+  NotFoundError,
+  DuplicateError,
+  RAGError
+} from './types/errors';
+
+// Dialog types
+export type {
+  DialogSearchOptions,
+  DialogSearchResult,
+  DialogHistoryManager
+} from './types/dialog';
+
+// Agent types
+export type {
+  AgentConfig,
+  AgentOptions,
+  AgentError,
+  ConsultationMode
+} from './types/agent';
+
+// Core functionality
+export { DialogueManager } from './dialogue';
+
+// Cache
+export { CacheManager, SecureCache } from './cache';
+export type { CacheError } from './cache';
+
+// Database
+export { DatabaseManager } from './database';
+export type { DatabaseError } from './database';
+
+// Monitoring and metrics
+export { Logger, MetricsService, AlertManager, SystemMonitor } from './monitoring';
+
+// Chain adapters
+export { EthereumAdapter, SolanaAdapter } from './chain';
+
+// Configuration
+export { ConfigManager } from './config';
+export type { ConfigError } from './config';
+
+// Knowledge management
+export { KnowledgeManager } from './types/base';
