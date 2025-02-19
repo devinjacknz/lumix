@@ -1,4 +1,4 @@
-export * from './types';
+export { ChainAdapter, ChainAddress, AddressDerivationOptions } from './types';
 export * from './solana-adapter';
 export * from './ethereum-adapter';
 export * from './adapter-factory';

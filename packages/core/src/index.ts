@@ -6,24 +6,53 @@ export * from './types/errors';
 // Dialog and consultation
 export * from './types/dialog';
 export * from './types/agent';
-export type { ConsultationMode } from './types/agent';
 
 // Core functionality
-export * from './dialogue';
-export * from './cache';
-export * from './database';
+export {
+  DialogueManager,
+  DialogueManagerConfig,
+  Message,
+  MessageRole
+} from './dialogue';
+
+export {
+  CacheManager,
+  SecureCache,
+  CacheError
+} from './cache';
+
+export {
+  DatabaseManager,
+  DatabaseConfig,
+  DatabaseError
+} from './database';
 
 // Monitoring and metrics
-export * from './monitoring';
+export {
+  Logger,
+  MetricsService,
+  AlertManager,
+  SystemMonitor
+} from './monitoring';
 
 // Chain adapters
-export * from './chain';
+export {
+  ChainAdapter,
+  EthereumAdapter,
+  SolanaAdapter
+} from './chain';
 
 // Configuration
-export * from './config';
+export {
+  ConfigManager,
+  ConfigError
+} from './config';
 
 // Messaging
-export * from './messaging';
+export {
+  MessagingMiddleware,
+  MiddlewareFunction
+} from './messaging';
 
 // Knowledge management
 export {

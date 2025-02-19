@@ -1,7 +1,8 @@
 export * from './types';
-export * from './middleware';
+export { MessagingMiddlewareManager } from './middleware';
+export { MiddlewareFunction, MessagingMiddleware } from '@lumix/types';
 
-import { MessagingMiddleware } from './middleware';
+import { MessagingMiddlewareManager } from './middleware';
 import { MiddlewareConfig } from './types';
 
 // 默认中间件配置
@@ -14,4 +15,4 @@ const defaultConfig: MiddlewareConfig = {
 };
 
 // 导出中间件单例实例
-export const messagingMiddleware = MessagingMiddleware.getInstance(defaultConfig); 
+export const messagingMiddleware = MessagingMiddlewareManager.getInstance(defaultConfig); 

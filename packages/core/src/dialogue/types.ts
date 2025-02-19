@@ -1,20 +1,14 @@
-export type MessageRole = 'user' | 'assistant' | 'system';
+import { BaseConfig, Message, MessageRole } from '@lumix/types';
 
-export interface Message {
-  role: MessageRole;
-  content: string;
-  metadata?: Record<string, unknown>;
-}
+export { Message, MessageRole };
 
-export interface DialogueManagerConfig {
-  maxHistory: number;
-  persistenceEnabled: boolean;
-  persistencePath?: string;
+export interface DialogueManagerConfig extends BaseConfig {
+  maxHistory?: number;
+  persistHistory?: boolean;
 }
 
 export interface DialogueManagerInterface {
   addMessage(message: Message): Promise<void>;
   getHistory(): Promise<Message[]>;
   clearHistory(): Promise<void>;
-  getLastMessage(): Promise<Message | null>;
 }

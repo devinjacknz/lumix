@@ -1,10 +1,11 @@
-import { Wallet, isAddress, getAddress } from 'ethers';
+import { Wallet } from 'ethers';
 import { ChainAdapter, ChainAddress, AddressDerivationOptions } from './types';
 import { ChainType } from '../config/types';
 import { logger } from '../monitoring';
 
 export class EthereumAdapter implements ChainAdapter {
   private readonly chainType: ChainType;
+  private wallet: Wallet | null = null;
 
   constructor(chainType: ChainType = 'ethereum') {
     if (chainType !== 'ethereum' && chainType !== 'base') {
@@ -13,37 +14,45 @@ export class EthereumAdapter implements ChainAdapter {
     this.chainType = chainType;
   }
 
-  public getChainType(): ChainType {
-    return this.chainType;
+  public async connect(): Promise<void> {
+    // 在这里可以添加连接到以太坊网络的逻辑
+    logger.info('EthereumAdapter', `Connected to ${this.chainType} network`);
   }
 
-  public async deriveAddress(
-    privateKey: string,
-    options?: AddressDerivationOptions
-  ): Promise<ChainAddress> {
+  public async disconnect(): Promise<void> {
+    this.wallet = null;
+    logger.info('EthereumAdapter', `Disconnected from ${this.chainType} network`);
+  }
+
+  public async getAddress(options?: AddressDerivationOptions): Promise<ChainAddress> {
     try {
-      // 处理私钥格式
-      if (!privateKey.startsWith('0x')) {
-        privateKey = `0x${privateKey}`;
+      if (!this.wallet) {
+        this.wallet = Wallet.createRandom();
       }
 
-      const wallet = new Wallet(privateKey);
-      const address = await wallet.getAddress();
-
-      logger.debug('EthereumAdapter', `Derived ${this.chainType} address`, {
-        address,
-        network: options?.network || 'mainnet'
-      });
+      // 如果提供了 path，可以使用它来派生新的地址
+      if (options?.path) {
+        const derivedWallet = Wallet.fromMnemonic(this.wallet.mnemonic.phrase, options.path);
+        return {
+          address: await derivedWallet.getAddress(),
+          publicKey: derivedWallet.publicKey,
+          privateKey: derivedWallet.privateKey
+        };
+      }
 
       return {
-        address: address.toLowerCase(),
-        publicKey: wallet.publicKey,
-        chain: this.chainType
+        address: await this.wallet.getAddress(),
+        publicKey: this.wallet.publicKey,
+        privateKey: this.wallet.privateKey
       };
     } catch (error) {
-      logger.error('EthereumAdapter', `Failed to derive ${this.chainType} address`, { error });
-      throw new Error(`Failed to derive ${this.chainType} address: ${error.message}`);
+      logger.error('EthereumAdapter', `Failed to get ${this.chainType} address`, { error });
+      throw new Error(`Failed to get ${this.chainType} address: ${error.message}`);
     }
+  }
+
+  public getChainType(): ChainType {
+    return this.chainType;
   }
 
   public validateAddress(address: string): boolean {

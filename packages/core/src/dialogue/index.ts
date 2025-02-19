@@ -1,2 +1,2 @@
-export * from './types';
-export * from './DialogueManager';
+export { Message, MessageRole, DialogueManagerConfig } from './types';
+export { DialogueManager } from './DialogueManager';

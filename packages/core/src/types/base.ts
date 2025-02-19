@@ -1,7 +1,25 @@
 import { z } from 'zod';
-import { BaseConfig, BaseResult, BaseManager } from '@lumix/types';
+import {
+  BaseConfig,
+  BaseResult,
+  BaseManager,
+  KnowledgeItem,
+  KnowledgeResult,
+  KnowledgeRetrievalResult,
+  KnowledgeRetrievalOptions,
+  KnowledgeManagerConfig
+} from '@lumix/types';
 
-export { BaseConfig, BaseResult, BaseManager };
+export {
+  BaseConfig,
+  BaseResult,
+  BaseManager,
+  KnowledgeItem,
+  KnowledgeResult,
+  KnowledgeRetrievalResult,
+  KnowledgeRetrievalOptions,
+  KnowledgeManagerConfig
+};
 
 /**
  * 模型配置接口
@@ -135,10 +153,15 @@ export const KnowledgeRetrievalResultSchema = z.object({
 });
 
 export const KnowledgeManagerConfigSchema = z.object({
+  name: z.string(),
+  version: z.string(),
+  description: z.string().optional(),
   namespace: z.string().optional(),
   maxItems: z.number().optional(),
   embedModel: z.string().optional(),
-  similarityThreshold: z.number().optional()
+  similarityThreshold: z.number().optional(),
+  storageType: z.enum(['memory', 'file', 'database']),
+  storagePath: z.string().optional()
 });
 
 export const KnowledgeResultSchema = z.object({

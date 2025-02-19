@@ -8,11 +8,13 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   treeshake: true,
+  noExternal: [
+    '@lumix/types',
+    '@lumix/adapter-sqlite'
+  ],
   external: [
     'react',
     'react-dom',
-    '@lumix/types',
-    '@lumix/adapter-sqlite',
     '@langchain/core',
     'langchain',
     'antd',
@@ -20,6 +22,9 @@ export default defineConfig({
     'echarts-for-react',
     'sqlite3',
     'uuid',
-    'zod'
+    'zod',
+    'ethers',
+    '@solana/web3.js',
+    'bs58'
   ]
 });

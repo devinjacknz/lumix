@@ -47,33 +47,85 @@ export interface EventEmitter {
   off(type: string, handler: (event: Event) => void): void;
 }
 
-// Dialogue types
-export interface DialogueMessage {
-  role: 'user' | 'assistant' | 'system';
+// Chain types
+export interface ChainAdapter {
+  connect(): Promise<void>;
+  disconnect(): Promise<void>;
+  getAddress(options?: AddressDerivationOptions): Promise<string>;
+}
+
+export interface ChainAddress {
+  address: string;
+  privateKey?: string;
+}
+
+export interface AddressDerivationOptions {
+  index?: number;
+  path?: string;
+}
+
+// Knowledge types
+export interface KnowledgeItem {
+  id: string;
+  content: string;
+  metadata?: Record<string, any>;
+  embedding?: number[];
+  timestamp?: Date;
+}
+
+export interface KnowledgeResult<T = any> {
+  success: boolean;
+  data?: T;
+  error?: Error;
+  metadata?: {
+    timestamp: Date;
+    duration: number;
+  };
+}
+
+export interface KnowledgeRetrievalResult {
+  item: KnowledgeItem;
+  score: number;
+  distance?: number;
+}
+
+export interface KnowledgeRetrievalOptions {
+  limit?: number;
+  minScore?: number;
+  filter?: Record<string, any>;
+  includeMetadata?: boolean;
+}
+
+export interface KnowledgeManagerConfig extends BaseConfig {
+  namespace?: string;
+  maxItems?: number;
+  embedModel?: string;
+  similarityThreshold?: number;
+  storageType: 'memory' | 'file' | 'database';
+  storagePath?: string;
+}
+
+// Message types
+export enum MessageRole {
+  User = 'user',
+  Assistant = 'assistant',
+  System = 'system'
+}
+
+export interface Message {
+  role: MessageRole;
   content: string;
   metadata?: Record<string, any>;
 }
 
-export interface DialogueContext {
-  messages: DialogueMessage[];
-  metadata?: Record<string, any>;
+export interface DialogueManagerConfig extends BaseConfig {
+  maxHistory?: number;
+  persistHistory?: boolean;
 }
 
-export interface DialogueHistory {
-  id: string;
-  sessionId: string;
-  messages: DialogueMessage[];
-  metadata?: Record<string, any>;
-  createdAt: number;
-  updatedAt: number;
-}
-
-export interface DialogueSession {
-  id: string;
-  userId: string;
-  context: Record<string, any>;
-  createdAt: number;
-  updatedAt: number;
+// Middleware types
+export interface MiddlewareFunction {
+  (message: any): Promise<any>;
 }
 
 // Knowledge base types
@@ -140,4 +192,10 @@ export interface Plugin {
   initialize(config: PluginConfig): Promise<void>;
   start(): Promise<void>;
   stop(): Promise<void>;
+}
+
+// Messaging types
+export interface MessagingMiddleware {
+  name: string;
+  execute: MiddlewareFunction;
 } 

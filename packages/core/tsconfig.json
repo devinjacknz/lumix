@@ -18,7 +18,16 @@
     "src/monitoring/**/*.ts",
     "src/chain/**/*.ts",
     "src/config/**/*.ts",
-    "src/messaging/**/*.ts"
+    "src/messaging/**/*.ts",
+    "src/middleware/**/*.ts",
+    "src/hsm/**/*.ts",
+    "src/llm/**/*.ts",
+    "src/plugin/**/*.ts",
+    "src/analysis/**/*.ts",
+    "src/knowledge/**/*.ts",
+    "src/memory/**/*.ts",
+    "src/persistence/**/*.ts",
+    "src/utils/**/*.ts"
   ],
   "references": [
     { "path": "../types" }

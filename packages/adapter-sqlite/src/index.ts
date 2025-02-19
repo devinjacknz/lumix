@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { DialogueMessage, DialogueContext } from '@lumix/types';
+import { Message, DialogueContext } from '@lumix/types';
 import { BaseSQLiteAdapter, SQLiteConfig, SQLiteError } from './base';
 
 export interface DialogHistoryManager {
-  saveMessage(message: DialogueMessage): Promise<void>;
+  saveMessage(message: Message): Promise<void>;
   getContext(): Promise<DialogueContext>;
   clearContext(): Promise<void>;
 }
@@ -26,7 +26,7 @@ export class SQLiteDialogHistoryManager extends BaseSQLiteAdapter implements Dia
     `);
   }
 
-  async saveMessage(message: DialogueMessage): Promise<void> {
+  async saveMessage(message: Message): Promise<void> {
     const metadata = message.metadata ? JSON.stringify(message.metadata) : null;
     await this.query(
       'INSERT INTO messages (role, content, metadata, timestamp) VALUES (?, ?, ?, ?)',

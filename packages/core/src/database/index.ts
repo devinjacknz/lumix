@@ -1,6 +1,15 @@
 import { DatabaseAdapter, DatabaseConfig } from '@lumix/types';
+import { BaseError } from '../types/errors';
 
 export { DatabaseAdapter, DatabaseConfig };
+
+// 定义 DatabaseError
+export class DatabaseError extends BaseError {
+  constructor(message: string, details?: Record<string, any>) {
+    super(message);
+    this.name = 'DatabaseError';
+  }
+}
 
 export class Database {
   private adapter: DatabaseAdapter;

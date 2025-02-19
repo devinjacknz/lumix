@@ -1,35 +1,35 @@
-import { Message } from '../types';
+import { MiddlewareFunction, MessagingMiddleware } from '@lumix/types';
 
-export interface MiddlewareFunction {
-  (message: Message): Promise<Message>;
-}
+export { MiddlewareFunction, MessagingMiddleware };
 
-export class MessagingMiddleware {
-  private static instance: MessagingMiddleware;
-  private middlewares: MiddlewareFunction[] = [];
+export class MessagingMiddlewareManager {
+  private static instance: MessagingMiddlewareManager;
+  private middlewares: MessagingMiddleware[] = [];
 
   private constructor() {}
 
-  static getInstance(config?: any): MessagingMiddleware {
-    if (!MessagingMiddleware.instance) {
-      MessagingMiddleware.instance = new MessagingMiddleware();
+  public static getInstance(): MessagingMiddlewareManager {
+    if (!MessagingMiddlewareManager.instance) {
+      MessagingMiddlewareManager.instance = new MessagingMiddlewareManager();
     }
-    return MessagingMiddleware.instance;
+    return MessagingMiddlewareManager.instance;
   }
 
-  addMiddleware(middleware: MiddlewareFunction): void {
+  public addMiddleware(middleware: MessagingMiddleware): void {
     this.middlewares.push(middleware);
   }
 
-  async process(message: Message): Promise<Message> {
-    let processedMessage = { ...message };
-    
-    for (const middleware of this.middlewares) {
-      processedMessage = await middleware(processedMessage);
-    }
+  public removeMiddleware(name: string): void {
+    this.middlewares = this.middlewares.filter(m => m.name !== name);
+  }
 
-    return processedMessage;
+  public async process(message: any): Promise<any> {
+    let result = message;
+    for (const middleware of this.middlewares) {
+      result = await middleware.execute(result);
+    }
+    return result;
   }
 }
 
-export default MessagingMiddleware; 
+export default MessagingMiddlewareManager; 

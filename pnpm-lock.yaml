@@ -139,7 +139,7 @@ importers:
         specifier: ^29.1.2
         version: 29.2.5(@babel/core@7.26.9)(babel-jest@29.7.0)(esbuild@0.24.2)(jest@29.7.0)(typescript@5.7.3)
       turbo:
-        specifier: ^1.12.4
+        specifier: ^1.13.4
         version: 1.13.4
       typescript:
         specifier: ^5.3.3
