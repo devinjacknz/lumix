@@ -1,0 +1,32 @@
+{
+  
+  "name": "@lumix/adapter-sqlite",
+  "version": "1.0.0",
+  "description": "SQLite adapter for Lumix persistence layer",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rimraf dist",
+    "lint": "eslint src --ext .ts",
+    "test": "jest --coverage --passWithNoTests"
+  },
+  "dependencies": {
+    "@lumix/types": "workspace:*",
+    "sqlite3": "^5.1.7",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@swc/jest": "^0.2.37",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.19",
+    "@types/sqlite3": "^3.1.11",
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "rimraf": "^5.0.5",
+    "ts-jest": "^29.1.2",
+    "tsup": "^8.0.2",
+    "typescript": "^5.3.3"
+  }
+}

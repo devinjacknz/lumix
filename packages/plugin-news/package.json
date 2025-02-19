@@ -1,0 +1,29 @@
+{
+  "name": "@lumix/plugin-news",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "clean": "rimraf dist",
+    "lint": "eslint src --ext .ts",
+    "test": "jest --coverage --passWithNoTests"
+  },
+  "dependencies": {
+    "@lumix/core": "workspace:*",
+    "axios": "^1.6.7",
+    "cheerio": "^1.0.0-rc.12",
+    "date-fns": "^2.30.0",
+    "natural": "^6.10.4"
+  },
+  "devDependencies": {
+    "@types/cheerio": "^0.22.35",
+    "@types/natural": "^5.1.5",
+    "@types/node": "^20.11.19",
+    "eslint": "^8.56.0",
+    "tsup": "^8.0.2",
+    "typescript": "^5.3.3"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "@lumix/plugin-nebula",
+  "version": "0.1.0",
+  "description": "Thirdweb Nebula integration plugin for Lumix",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest --coverage --passWithNoTests",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@lumix/core": "workspace:*",
+    "@thirdweb-dev/sdk": "^4.0.23",
+    "@thirdweb-dev/chains": "^0.1.75",
+    "ethers": "^5.7.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "rimraf": "^5.0.5",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.11"
+  },
+  "peerDependencies": {
+    "@lumix/core": "workspace:*"
+  }
+} 

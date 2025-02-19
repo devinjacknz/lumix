@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "baseUrl": ".",
+    "paths": {
+      "@lumix/*": ["../../packages/*/src"]
+    }
+  },
+  "include": ["src/**/*"],
+  "references": [
+    { "path": "../core" },
+    { "path": "../plugin-chain-adapter" },
+    { "path": "../plugin-chain-analyzer" },
+    { "path": "../plugin-nebula" }
+  ]
+}

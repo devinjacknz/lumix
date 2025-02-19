@@ -1,0 +1,82 @@
+# {{group}} API 文档
+
+{{#each nodes}}
+## {{name}}
+
+{{description}}
+
+{{#if source}}
+**源文件:** `{{source.file}}:{{source.line}}`
+{{/if}}
+
+{{#if modifiers}}
+**修饰符:** {{join modifiers ", "}}
+{{/if}}
+
+{{#if signature}}
+**签名:** `{{signature}}`
+{{/if}}
+
+{{#if params}}
+### 参数
+
+| 参数名 | 类型 | 描述 | 可选 | 默认值 |
+|--------|------|------|------|---------|
+{{#each params}}
+| `{{name}}` | `{{type.name}}` | {{description}} | {{#if optional}}是{{else}}否{{/if}} | {{defaultValue}} |
+{{/each}}
+{{/if}}
+
+{{#if returns}}
+### 返回值
+
+`{{returns.name}}` {{returns.description}}
+{{/if}}
+
+{{#if members}}
+### 成员
+
+{{#each members}}
+#### {{name}}
+
+{{description}}
+
+{{#if modifiers}}
+**修饰符:** {{join modifiers ", "}}
+{{/if}}
+
+{{#if signature}}
+**签名:** `{{signature}}`
+{{/if}}
+
+{{#if params}}
+##### 参数
+
+| 参数名 | 类型 | 描述 | 可选 | 默认值 |
+|--------|------|------|------|---------|
+{{#each params}}
+| `{{name}}` | `{{type.name}}` | {{description}} | {{#if optional}}是{{else}}否{{/if}} | {{defaultValue}} |
+{{/each}}
+{{/if}}
+
+{{#if returns}}
+##### 返回值
+
+`{{returns.name}}` {{returns.description}}
+{{/if}}
+
+{{/each}}
+{{/if}}
+
+{{#if examples}}
+### 示例
+
+{{#each examples}}
+```typescript
+{{this}}
+```
+{{/each}}
+{{/if}}
+
+---
+{{/each}} 
