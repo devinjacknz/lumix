@@ -2,11 +2,32 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "src",
     "baseUrl": ".",
     "paths": {
-      "@lumix/types": ["../types/src"]
-    }
+      "@lumix/*": ["../*/src"]
+    },
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noImplicitAny": false,
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "module": "CommonJS",
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM"],
+    "resolveJsonModule": true,
+    "allowJs": false,
+    "forceConsistentCasingInFileNames": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true
   },
   "include": [
     "src/**/*.ts",
@@ -14,20 +35,17 @@
     "src/types/**/*.ts",
     "src/dialogue/**/*.ts",
     "src/cache/**/*.ts",
-    "src/database/**/*.ts",
-    "src/monitoring/**/*.ts",
     "src/chain/**/*.ts",
-    "src/config/**/*.ts",
+    "src/database/**/*.ts",
     "src/messaging/**/*.ts",
-    "src/middleware/**/*.ts",
-    "src/hsm/**/*.ts",
-    "src/llm/**/*.ts",
-    "src/plugin/**/*.ts",
-    "src/analysis/**/*.ts",
-    "src/knowledge/**/*.ts",
-    "src/memory/**/*.ts",
-    "src/persistence/**/*.ts",
-    "src/utils/**/*.ts"
+    "src/monitoring/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/*.d.ts"
   ],
   "references": [
     { "path": "../types" }

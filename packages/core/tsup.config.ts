@@ -3,7 +3,7 @@ import { defineConfig } from "tsup";
 export default defineConfig({
   entry: ["src/index.ts"],
   format: ["cjs", "esm"],
-  dts: true,
+  dts: false,
   splitting: false,
   sourcemap: true,
   clean: true,
@@ -13,6 +13,9 @@ export default defineConfig({
     '@lumix/adapter-sqlite'
   ],
   external: [
+    'redis',
+    'lru-cache',
+    'events',
     'react',
     'react-dom',
     '@langchain/core',
@@ -26,5 +29,5 @@ export default defineConfig({
     'ethers',
     '@solana/web3.js',
     'bs58'
-  ]
+  ],
 });
